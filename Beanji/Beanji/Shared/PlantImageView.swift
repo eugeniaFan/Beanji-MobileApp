@@ -1,6 +1,6 @@
 //
 //  PlantImage.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 23.06.26.
 //

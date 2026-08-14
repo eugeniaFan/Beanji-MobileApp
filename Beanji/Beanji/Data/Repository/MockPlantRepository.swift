@@ -1,6 +1,6 @@
 //
 //  MockPlantRepository.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
 //

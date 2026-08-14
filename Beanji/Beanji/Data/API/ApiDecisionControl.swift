@@ -1,6 +1,6 @@
 //
 //  ApiDecisionControl.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 29.06.26.
 //

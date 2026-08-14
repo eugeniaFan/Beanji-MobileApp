@@ -8,11 +8,23 @@
 import SwiftUI
 import SwiftData
 
+// Central place for app-wide dependency injection
+extension EnvironmentValues {
+    @Entry var plantAPI: PlantAPI = ApiDecisionControl()
+
+    // Repository-Factory Closure:
+    @Entry var makePlantRepository: @MainActor (ModelContext) -> PlantRepository = { modelContext in
+        SwiftDataPlantRepository(modelContext: modelContext)
+    }
+}
+
+
 @main
 struct BeanjiApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Plant.self,
+            PlantSpeciesInfo.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

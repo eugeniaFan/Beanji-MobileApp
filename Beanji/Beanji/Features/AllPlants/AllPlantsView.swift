@@ -59,18 +59,7 @@ struct AllPlantsView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 if viewModel.selectedPage == .myPlants {
-                    Button {
-                        viewModel.showingAddPlant = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-                            .frame(width: 60, height: 60)
-                            .background(Color.green)
-                            .clipShape(Circle())
-                            .shadow(radius: 2)
-                    }.accessibilityIdentifier("plantListAddButton")
-                    .padding(20)
+                   
                 }
             }
         }

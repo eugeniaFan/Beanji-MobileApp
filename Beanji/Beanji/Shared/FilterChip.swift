@@ -1,6 +1,6 @@
 //
 //  FilterChip.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 25.06.26.
 //

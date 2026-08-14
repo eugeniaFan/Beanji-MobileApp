@@ -1,6 +1,6 @@
 //
 //  SpeciesImageView.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 28.06.26.
 //

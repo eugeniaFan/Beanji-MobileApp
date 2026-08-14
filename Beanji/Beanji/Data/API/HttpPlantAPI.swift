@@ -1,6 +1,6 @@
 //
 //  HttpPlantAPI.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 16.06.26.
 //

@@ -1,6 +1,6 @@
 //
 //  LocalPlantCatalogAPI.swift
-//  StudentProjekt
+//  Beanji
 //
 //  Created by Eugenia Fanenstiel on 22.06.26.
 //
