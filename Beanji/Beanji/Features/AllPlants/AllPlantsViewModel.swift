@@ -402,35 +402,3 @@ func nextWateringText(for plant: Plant) -> String {
 func waterStatusColor(for plant: Plant) -> Color {
     plant.daysUntilNextWatering() <= 1 ? .orange : .blue
 }
-func nextWateringText(for plant: Plant) -> String {
-    let nextDate =
-    Calendar.current.date(
-        byAdding: .day,
-        value: plant.wateringIntervalDays,
-        to: plant.lastWatered
-    ) ?? Date()
-
-    let days = Calendar.current.dateComponents([.day], from: Date(), to: nextDate).day ?? 0
-
-    if days <= 0 {
-        return "Heute gießen"
-    } else if days == 1 {
-        return "Morgen"
-    } else {
-        return "In \(days) Tagen"
-    }
-}
-
-func waterStatusColor(for plant: Plant) -> Color {
-    let nextDate =
-        Calendar.current.date(
-            byAdding: .day,
-            value: plant.wateringIntervalDays,
-            to: plant.lastWatered
-        ) ?? Date()
-
-    let days =
-        Calendar.current.dateComponents([.day], from: Date(), to: nextDate).day
-        ?? 0
-    return days <= 1 ? .orange : .blue
-}

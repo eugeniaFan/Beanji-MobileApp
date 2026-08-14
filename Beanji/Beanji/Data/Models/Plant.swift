@@ -60,3 +60,30 @@ class Plant: Identifiable{
         
     }
 }
+
+//  MARK: - Shared watering schedule logic
+
+//  Centralizes the "when is this plant due for watering" calculation so
+//  ViewModels don't each reimplement the same date math.
+extension Plant {
+
+    // The next date this plant is due to be watered, based on `lastWatered` and `wateringIntervalDays`.
+    func nextWateringDate(using calendar: Calendar = .current) -> Date {
+        calendar.date(
+            byAdding: .day,
+            value: wateringIntervalDays,
+            to: lastWatered
+        ) ?? lastWatered
+    }
+
+    // Number of days from `referenceDate` until the plant's next watering is due.
+    // A negative value means the plant is overdue by that many days.
+    func daysUntilNextWatering(
+        using calendar: Calendar = .current,
+        referenceDate: Date = Date()
+    ) -> Int {
+        let dueDay = calendar.startOfDay(for: nextWateringDate(using: calendar))
+        let today = calendar.startOfDay(for: referenceDate)
+        return calendar.dateComponents([.day], from: today, to: dueDay).day ?? 0
+    }
+}
