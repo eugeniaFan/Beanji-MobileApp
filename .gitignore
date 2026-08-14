@@ -2,8 +2,13 @@
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
+# macOS
+.DS_Store
+
 ## User settings
 xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
 
 ## Obj-C/Swift specific
 *.hmap
@@ -29,7 +34,25 @@ playground.xcworkspace
 # hence it is not needed unless you have added a package configuration file to your project
 # .swiftpm
 
+# Xcode build and test output
 .build/
+DerivedData/
+*.xcresult
+*.xccoverage
+
+# Local secrets and environment config
+APIKey.swift
+Secrets.xcconfig
+.env
+.env.*
+!.env.example
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+*.jsoon
+
 
 # CocoaPods
 #
