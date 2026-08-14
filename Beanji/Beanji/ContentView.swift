@@ -5,57 +5,54 @@
 //  Created by Eugenia Fanenstiel on 14.08.26.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Environment(\.plantAPI) private var plantAPI
+    @Environment(\.makePlantRepository) private var makePlantRepository
+    @State private var allplantsViewModel: AllPlantsViewModel?
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
+        TabView {
+            CareTasksView(
+                viewModel: CareTasksViewModel(
+                    repository: makePlantRepository(modelContext)
+                )
+            )
+            .tabItem {
+                Label("Care Tasks", systemImage: "drop.fill")
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+            Group {
+                if let allplantsViewModel {
+                    AllPlantsView(viewModel: allplantsViewModel)
+                } else {
+                    ProgressView()
                 }
             }
-        } detail: {
-            Text("Select an item")
+            .tabItem {
+                Label("Pflanzen", systemImage: "leaf.fill")
+            }
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+        .task {
+            guard allplantsViewModel == nil else { return }
+            allplantsViewModel = AllPlantsViewModel(
+                catalogService: plantAPI,
+                repository: makePlantRepository(modelContext)
+            )
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .environment(\.plantAPI, MockPlantAPI())
+        .environment(\.makePlantRepository) { _ in
+            MockPlantRepository()
+        }
+        .modelContainer(
+            for: [Plant.self, PlantSpeciesInfo.self],
+            inMemory: true
+        )
 }
