@@ -47,15 +47,15 @@ struct PlantDetailView: View {
             .padding(.horizontal, 20)
         }
 
-//        .sheet(isPresented: $bindableViewModel.showingEditSheet, onDismiss: {
-//            self.viewModel.editViewModel = nil
-//        }) {
-//            if let editVM = self.viewModel.editViewModel {
-//                EditPlantView(viewModel: editVM)
-//            } else {
-//                Text("Kein Bearbeitungsmodell verfügbar.")
-//            }
-//        }
+        .sheet(isPresented: $bindableViewModel.showingEditSheet, onDismiss: {
+            self.viewModel.editViewModel = nil
+        }) {
+            if let editVM = self.viewModel.editViewModel {
+                EditPlantView(viewModel: editVM)
+            } else {
+                Text("Kein Bearbeitungsmodell verfügbar.")
+            }
+        }
         .alert("Pflanze löschen?", isPresented: $bindableViewModel.showingDeleteAlert) {
             Button("Löschen", role: .destructive) {
                 Task {

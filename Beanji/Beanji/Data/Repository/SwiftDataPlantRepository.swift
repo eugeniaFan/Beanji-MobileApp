@@ -17,7 +17,10 @@ final class SwiftDataPlantRepository: PlantRepository {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
-
+    
+    // MARK: - Public Fetch Methods
+    
+    // Fetches all plants, ordered by creation date (newest first).
     func fetchAllPlants() async throws -> [Plant] {
         let descriptor = FetchDescriptor<Plant>(sortBy: [
             SortDescriptor(\.createdAt, order: .reverse)
@@ -31,10 +34,9 @@ final class SwiftDataPlantRepository: PlantRepository {
             SortDescriptor(\.createdAt, order: .reverse)
         ])
 
-        // Prädikat nur für Suche
         if let searchText, !searchText.isEmpty {
             descriptor.predicate = #Predicate { plant in
-                plant.name.localizedStandardContains(searchText) // 
+                plant.name.localizedStandardContains(searchText)
                     || plant.speciesName.localizedStandardContains(searchText)
             }
         }
@@ -42,17 +44,26 @@ final class SwiftDataPlantRepository: PlantRepository {
         return try modelContext.fetch(descriptor)
     }
 
+    // MARK: - CRUD Operations
     
+    // TODO: more error handling and check for asyn operations
     func savePlant(_ plant: Plant) async throws {
         modelContext.insert(plant)
         try modelContext.save()
     }
     
-    
+    func deletePlant(_ plant: Plant) async throws {
+        modelContext.delete(plant)
+        try modelContext.save()
+    }
+
+    func updatePlant(_ plant: Plant) async throws {
+        try modelContext.save()
+    }
     
     // Creates or updates a PlantSpeciesInfo entity in SwiftData and associates it with the new Plant
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws -> Plant {
-        // Create or update PlantSpeciesInfo in SwiftData
+       
         let speciesInfo = try upsertSpeciesInfo(from: species)
         // Download image data so it is available offline in "Meine Pflanzen"
                 var photoData: Data? = nil
@@ -105,6 +116,7 @@ final class SwiftDataPlantRepository: PlantRepository {
         return newInfo
     }
 
+    
     private func wateringIntervalDays(from species: PlantSpecies) -> Int {
         guard let value = species.wateringFrequency?.value else {
             switch species.watering?.lowercased() {
@@ -130,18 +142,11 @@ final class SwiftDataPlantRepository: PlantRepository {
 
         return Int(cleaned) ?? 7
     }
-    
 
-    func deletePlant(_ plant: Plant) async throws {
-        modelContext.delete(plant)
-        try modelContext.save()
-    }
-
-    func updatePlant(_ plant: Plant) async throws { 
-        try modelContext.save()
-    }
     
-    // MARK: - Refresh method: Updating PlantSpeciesInfo in SwiftData which is in a relation with Plant
+    // MARK: - Refresh method
+    
+    // This method fetches the latest species info from the API and updates the local database.
     func refreshPlantSpeciesInfo(for plant: Plant, plantAPI: PlantAPI) async throws {
         guard let plantSpeciesInfo = plant.speciesInfo else { return }
         let latestPlantSpecies = try await plantAPI.getPlantDetail(id: plantSpeciesInfo.speciesInfoId)

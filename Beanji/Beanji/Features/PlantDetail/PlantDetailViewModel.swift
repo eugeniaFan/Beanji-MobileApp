@@ -36,7 +36,7 @@ final class PlantDetailViewModel {
             }
         }
     }
-    //var editViewModel: EditPlantViewModel?
+    var editViewModel: EditPlantViewModel?
     var showingDeleteAlert: Bool = false
     var showingAddToMyPlantsAlert: Bool = false
     var errorMessage: String?
@@ -70,14 +70,14 @@ final class PlantDetailViewModel {
         self.calendar = calendar
     }
 
-//    func makeEditPlantViewModel() -> EditPlantViewModel? {
-//        guard let plant = editablePlant else { return nil }
-//        let editViewModel = EditPlantViewModel(plant: plant, repository: repository)
-//        editViewModel.onPlantUpdated = { [weak self] in
-//            self?.onPlantUpdated?()
-//        }
-//        return editViewModel
-//    }
+    func makeEditPlantViewModel() -> EditPlantViewModel? {
+        guard let plant = editablePlant else { return nil }
+        let editViewModel = EditPlantViewModel(plant: plant, repository: repository)
+        editViewModel.onPlantUpdated = { [weak self] in
+            self?.onPlantUpdated?()
+        }
+        return editViewModel
+    }
 
     // MARK: - Basisdata
 
