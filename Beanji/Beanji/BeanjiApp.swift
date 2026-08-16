@@ -10,12 +10,12 @@ import SwiftData
 
 // Central place for app-wide dependency injection
 extension EnvironmentValues {
-    @Entry var plantAPI: PlantAPI = ApiDecisionControl()
+    @Entry var plantAPI: PlantAPI = LocalPlantCatalog()
 
-    // Repository-Factory Closure:
-    @Entry var makePlantRepository: @MainActor (ModelContext) -> PlantRepository = { modelContext in
-        SwiftDataPlantRepository(modelContext: modelContext)
-    }
+    @Entry var makePlantRepository:
+        @MainActor (ModelContext) -> PlantRepository = { modelContext in
+            SwiftDataPlantRepository(modelContext: modelContext)
+        }
 }
 
 

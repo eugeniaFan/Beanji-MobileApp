@@ -28,7 +28,6 @@ enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
 final class AllPlantsViewModel {
     private let catalogService: PlantAPI
     private let repository: PlantRepository
-    private let localCatalog = LocalPlantCatalog()
     private let catalogPageSize = 40
 
     // MARK: States
@@ -48,8 +47,7 @@ final class AllPlantsViewModel {
     let filters = ["Alle", "Drinnen", "Viel Licht", "Schatten"]
     private var catalogPage = 1
     private var isSearching = false  // Flag to indicate if the user is currently searching in the catalog
-
-    // Dependency Injection
+    
     init(catalogService: PlantAPI, repository: PlantRepository) {
         self.catalogService = catalogService
         self.repository = repository
@@ -163,9 +161,13 @@ final class AllPlantsViewModel {
 
         guard canLoadMoreCatalog, !isCatalogLoading else { return }
         isCatalogLoading = true
+        
+        defer {
+                isCatalogLoading = false
+            }
 
         do {
-            let pagePlants = try await localCatalog.searchPlants(
+            let pagePlants = try await catalogService.searchPlants(
                 matching: "",
                 page: catalogPage,
                 perPage: catalogPageSize
@@ -187,7 +189,6 @@ final class AllPlantsViewModel {
             errorMessage =
             "Fehler beim Laden des Pflanzenkatalogs: \(error.localizedDescription)"
         }
-        isCatalogLoading = false
     }
 
     private func refreshCatalogPlants(_ plants: [PlantSpecies]) async -> [PlantSpecies] {
