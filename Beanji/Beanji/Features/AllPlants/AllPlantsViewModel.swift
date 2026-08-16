@@ -26,7 +26,7 @@ enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
 @Observable
 @MainActor
 final class AllPlantsViewModel {
-    private let catalogService: PlantAPI
+    private let catalogService: PlantCatalogRepository
     private let repository: PlantRepository
     private let catalogPageSize = 40
 
@@ -48,7 +48,7 @@ final class AllPlantsViewModel {
     private var catalogPage = 1
     private var isSearching = false  // Flag to indicate if the user is currently searching in the catalog
     
-    init(catalogService: PlantAPI, repository: PlantRepository) {
+    init(catalogService: PlantCatalogRepository, repository: PlantRepository) {
         self.catalogService = catalogService
         self.repository = repository
     }

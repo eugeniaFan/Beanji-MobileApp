@@ -8,6 +8,65 @@ import Foundation
 import Testing
 @testable import Beanji
 
+
+struct BeanjiTests {
+
+    @Test
+    @MainActor
+    func clearingCatalogSearchShowsAllLocalPlantsAgain() async {
+        let viewModel = AllPlantsViewModel(
+            catalogService: TestPlantCatalog(),
+            repository: MockPlantRepository()
+        )
+        viewModel.selectedPage = .allPlants
+        await viewModel.loadInitialData()
+        
+        let initialPlantCount = viewModel.filteredCatalogPlants.count
+        #expect(initialPlantCount == 3)
+        
+        
+        viewModel.searchText = "Monstera"
+        await viewModel.performApiSearch()
+
+        let searchResultCount = viewModel.filteredCatalogPlants.count
+        let firstSearchResultName = viewModel.filteredCatalogPlants.first?.commonName
+        
+        #expect(searchResultCount == 1)
+        #expect(firstSearchResultName == "Swiss Cheese Plant")
+    
+        viewModel.searchText = ""
+        await viewModel.handleSearchTextChanged()
+
+        let restoredPlantCount = viewModel.filteredCatalogPlants.count
+        
+        #expect(restoredPlantCount == 3)
+    }
+    
+    @Test
+    @MainActor
+    func enrichmentRequestsRemoteDataOnlyAfterExplicitSearch() async throws {
+        let remoteProvider = TrackingRemoteProvider()
+        
+        let service = CatalogEnrichmentService(remoteProvider: remoteProvider)
+        let initialSearchCallCount = remoteProvider.searchCallCount
+        #expect(initialSearchCallCount == 0)
+        
+        let results = try await service.searchPlants(matching: "Monstera")
+        let finalSearchCallCount = remoteProvider.searchCallCount
+
+        let receivedSearchQuery = remoteProvider.lastSearchQuery
+
+        let remoteResultCount = results.count
+
+        let firstRemoteResultName = results.first?.commonName
+
+        #expect(finalSearchCallCount == 1)
+        #expect(receivedSearchQuery == "Monstera")
+        #expect(remoteResultCount == 1)
+        #expect(firstRemoteResultName == "Remote Monstera")
+    }
+}
+
 private struct TestPlantCatalog: PlantCatalogRepository {
     private let plants = [
         makePlantSpecies(
@@ -27,58 +86,29 @@ private struct TestPlantCatalog: PlantCatalogRepository {
         ),
     ]
     
-    func searchPlants(
-            matching query: String
-        ) async throws -> [PlantSpecies] {
-            let trimmedQuery = query.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
+    func searchPlants(matching query: String) async throws -> [PlantSpecies] {
+        let trimmedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
-            guard !trimmedQuery.isEmpty else {
-                return plants
-            }
-
-            return plants.filter { plant in
-                plant.commonName.localizedCaseInsensitiveContains(
-                    trimmedQuery
-                )
-                || plant.scientificName.localizedCaseInsensitiveContains(
-                    trimmedQuery
-                )
-            }
+        guard !trimmedQuery.isEmpty else {
+            return plants
         }
 
-        func getPlantDetail(
-            id: Int
-        ) async throws -> PlantSpecies {
-            guard let plant = plants.first(
-                where: { $0.speciesId == id }
-            ) else {
-                throw LocalPlantCatalogError.plantNotFound
-            }
-
-            return plant
+        return plants.filter { plant in
+            plant.commonName.localizedCaseInsensitiveContains(trimmedQuery)
+            || plant.scientificName.localizedCaseInsensitiveContains(trimmedQuery)
         }
-}
+    }
 
-private func makePlantSpecies(
-    id: Int,
-    commonName: String,
-    scientificName: String
-) -> PlantSpecies {
-    PlantSpecies(
-        speciesId: id,
-        commonName: commonName,
-        scientificName: scientificName,
-        watering: nil,
-        wateringFrequency: nil,
-        sunlight: nil,
-        maintenance: nil,
-        indoor: true,
-        imageUrl: nil,
-        careLevel: nil,
-        description: nil
-    )
+    func getPlantDetail(id: Int) async throws -> PlantSpecies {
+        guard let plant = plants.first(
+            where: { $0.speciesId == id }
+        ) else {
+            throw LocalPlantCatalogError.plantNotFound
+        }
+        return plant
+    }
 }
 
 private final class TrackingRemoteProvider: PlantSpeciesProvider {
@@ -111,44 +141,22 @@ private final class TrackingRemoteProvider: PlantSpeciesProvider {
     }
 }
 
-struct BeanjiTests {
-
-    @Test
-    @MainActor
-    func clearingCatalogSearchShowsAllLocalPlantsAgain() async {
-        let viewModel = AllPlantsViewModel(
-            catalogService: TestPlantCatalog(),
-            repository: MockPlantRepository()
-        )
-        viewModel.selectedPage = .allPlants
-        await viewModel.loadInitialData()
-        
-        #expect(viewModel.filteredCatalogPlants.count == 3)
-        
-        
-        viewModel.searchText = "Monstera"
-        await viewModel.performApiSearch()
-        #expect(viewModel.filteredCatalogPlants.count == 1)
-        
-        #expect(viewModel.filteredCatalogPlants.first?.commonName == "Swiss Cheese Plant")
-    
-        
-        viewModel.searchText = ""
-        await viewModel.handleSearchTextChanged()
-
-        #expect(viewModel.filteredCatalogPlants.count == 3)
-    }
-    
-    @Test func enrichmentRequestsRemoteDataOnlyAfterExpicitSearch() async throws {
-        let remoteProvider = TrackingRemoteProvider()
-        
-        let service = await CatalogEnrichmentService(remoteProvider: remoteProvider)
-        #expect(remoteProvider.searchCallCount == 0)
-        
-        let results = try await service.searchPlants(matching: "Monstera")
-        #expect(remoteProvider.searchCallCount == 1)
-        #expect(remoteProvider.lastSearchQuery == "Monstera")
-        #expect(results.count == 1)
-        #expect(results.first?.commonName == "Remote Monstera")
-    }
+private func makePlantSpecies(
+    id: Int,
+    commonName: String,
+    scientificName: String
+) -> PlantSpecies {
+    PlantSpecies(
+        speciesId: id,
+        commonName: commonName,
+        scientificName: scientificName,
+        watering: nil,
+        wateringFrequency: nil,
+        sunlight: nil,
+        maintenance: nil,
+        indoor: true,
+        imageUrl: nil,
+        careLevel: nil,
+        description: nil
+    )
 }

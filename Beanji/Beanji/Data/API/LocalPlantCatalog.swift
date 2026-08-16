@@ -25,7 +25,7 @@ enum LocalPlantCatalogError: LocalizedError {
     }
 }
 
-struct LocalPlantCatalog: PlantSpeciesProvider {
+struct LocalPlantCatalog: PlantCatalogRepository {
     private let fileName = "houseplants"
     private let fileExtension = "json"
 

@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.plantAPI) private var plantAPI
+    @Environment(\.plantCatalog) private var plantCatalog
     @Environment(\.makePlantRepository) private var makePlantRepository
     @State private var allplantsViewModel: AllPlantsViewModel?
 
@@ -38,7 +38,7 @@ struct ContentView: View {
         .task {
             guard allplantsViewModel == nil else { return }
             allplantsViewModel = AllPlantsViewModel(
-                catalogService: plantAPI,
+                catalogService: plantCatalog,
                 repository: makePlantRepository(modelContext)
             )
         }
@@ -47,7 +47,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environment(\.plantAPI, PreviewPlantProvider())
+        .environment(\.plantCatalog, PreviewPlantProvider())
         .environment(\.makePlantRepository) { _ in
             MockPlantRepository()
         }
