@@ -1,11 +1,10 @@
 //
-//  PlantAPI.swift
+//  PlantSpeciesProvider.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 11.06.26.
 //
-//  MARK: Plant Protocol
-//  Defines the contract for plant data sources (local, HTTP, or mock).
+//  Defines the shared read operations for plant species data.
 
 import Foundation
 
@@ -24,21 +23,17 @@ protocol PlantSpeciesProvider {
 
 extension PlantSpeciesProvider {
     func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies] {
-        let all = try await searchPlants(matching: query)
+        let allPlants = try await searchPlants(matching: query)
         
         guard page > 0, perPage > 0 else { return [] }
 
-        let start = (page - 1) * perPage
-        guard start < all.count else { return [] }
+        let startIndex = (page - 1) * perPage
+        guard startIndex < allPlants.count else { return [] }
 
-        let end = min(start + perPage, all.count)
-        return Array(all[start..<end])
+        let endIndex = min(startIndex + perPage, allPlants.count)
+        return Array(allPlants[startIndex..<endIndex])
     }
 }
 
 // A catalog repository provides plant species used for browsing and search.
 protocol PlantCatalogRepository: PlantSpeciesProvider {}
-
-// Temporary compatibility name for existing API-related code.
-// Existing call sites will be migrated in separate, small steps.
-typealias PlantAPI = PlantSpeciesProvider

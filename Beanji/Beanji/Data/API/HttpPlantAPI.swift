@@ -16,7 +16,7 @@ enum ApiError: Error {
     case noData
 }
 
-struct HttpPlantAPI: PlantAPI {
+struct HttpPlantAPI: PlantSpeciesProvider {
     
     private static let baseUrl = "https://perenual.com/api/v2"
     private static let fallbackBaseUrl = "https://perenual.com/api"

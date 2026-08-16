@@ -138,9 +138,9 @@ final class MockPlantRepository: PlantRepository {
     }
 
     
-    func refreshPlantSpeciesInfo(for plant: Plant, plantAPI: PlantAPI)
+    func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider)
         async throws
     {
-        // TODO: need to be implemented for mock repository, but not needed for now
+        // No refresh is required for the in-memory repository
     }
 }

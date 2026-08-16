@@ -147,10 +147,13 @@ final class SwiftDataPlantRepository: PlantRepository {
     // MARK: - Refresh method
     
     // This method fetches the latest species info from the API and updates the local database.
-    func refreshPlantSpeciesInfo(for plant: Plant, plantAPI: PlantAPI) async throws {
+    func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider) async throws {
         guard let plantSpeciesInfo = plant.speciesInfo else { return }
-        let latestPlantSpecies = try await plantAPI.getPlantDetail(id: plantSpeciesInfo.speciesInfoId)
-
+        
+        let latestPlantSpecies = try await provider.getPlantDetail(
+            id: plantSpeciesInfo.speciesInfoId
+        )
+        
         plantSpeciesInfo.update(from: latestPlantSpecies)
         try modelContext.save()
     }

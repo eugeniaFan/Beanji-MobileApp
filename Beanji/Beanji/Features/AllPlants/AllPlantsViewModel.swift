@@ -61,7 +61,7 @@ final class AllPlantsViewModel {
         let detailViewModel = PlantDetailViewModel(
             plant: plant,
             repository: repository,
-            plantAPI: catalogService
+            plantSpeciesProvider: catalogService
         )
         detailViewModel.onPlantDeleted = onPlantDeleted
         detailViewModel.onPlantUpdated = { [weak self] in
@@ -78,7 +78,7 @@ final class AllPlantsViewModel {
         let viewModel = PlantDetailViewModel(
             species: species,
             repository: repository,
-            plantAPI: catalogService
+            plantSpeciesProvider: catalogService
         )
         viewModel.onDidAddToMyPlants = { [weak self] in
             Task { await self?.loadMyPlants() }
