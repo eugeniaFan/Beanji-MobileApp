@@ -1,5 +1,5 @@
 //
-//  SwiftDataPlantRepository.swift
+//  SwiftDataUserPlantRepository.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 25.06.26.
@@ -11,7 +11,7 @@ import SwiftData
 
 
 @MainActor
-final class SwiftDataPlantRepository: PlantRepository {
+final class SwiftDataUserPlantRepository: UserPlantRepository {
     private let modelContext: ModelContext
 
     init(modelContext: ModelContext) {

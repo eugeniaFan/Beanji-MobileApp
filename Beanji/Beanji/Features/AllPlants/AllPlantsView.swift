@@ -305,7 +305,7 @@ struct AllPlantsView: View {
     AllPlantsView(
         viewModel: AllPlantsViewModel(
             catalogService: PreviewPlantProvider(),
-            repository: MockPlantRepository()
+            repository: InMemoryUserPlantRepository()
         )
     )
     .modelContainer(for: [Plant.self, PlantSpeciesInfo.self], inMemory: true)

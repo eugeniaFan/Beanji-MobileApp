@@ -16,7 +16,7 @@ enum PlantDetailMode {
 @Observable
 @MainActor
 final class PlantDetailViewModel {
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
     private let plantSpeciesProvider: PlantSpeciesProvider?
     private let calendar: Calendar
 
@@ -47,7 +47,7 @@ final class PlantDetailViewModel {
 
     init(
         plant: Plant,
-        repository: PlantRepository,
+        repository: UserPlantRepository,
         plantSpeciesProvider: PlantSpeciesProvider?,
         calendar: Calendar = .current
     ) {
@@ -59,7 +59,7 @@ final class PlantDetailViewModel {
 
     init(
         species: PlantSpecies,
-        repository: PlantRepository,
+        repository: UserPlantRepository,
         plantSpeciesProvider: PlantSpeciesProvider? = nil,
         calendar: Calendar = .current
     ) {

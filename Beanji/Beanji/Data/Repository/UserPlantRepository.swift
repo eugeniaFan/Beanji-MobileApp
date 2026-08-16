@@ -1,5 +1,5 @@
 //
-//  PlantRepository.swift
+//  UserPlantRepository.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
@@ -9,7 +9,7 @@
 import Foundation
 
 @MainActor
-protocol PlantRepository {
+protocol UserPlantRepository {
     func fetchAllPlants() async throws -> [Plant]
     func fetchPlants(searchText: String?, filter: String?) async throws -> [Plant]
     

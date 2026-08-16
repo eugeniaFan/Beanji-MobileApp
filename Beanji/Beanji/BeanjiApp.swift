@@ -12,9 +12,9 @@ import SwiftData
 extension EnvironmentValues {
     @Entry var plantCatalog: PlantCatalogRepository = LocalPlantCatalog()
 
-    @Entry var makePlantRepository:
-        @MainActor (ModelContext) -> PlantRepository = { modelContext in
-            SwiftDataPlantRepository(modelContext: modelContext)
+    @Entry var makeUserPlantRepository:
+        @MainActor (ModelContext) -> UserPlantRepository = { modelContext in
+            SwiftDataUserPlantRepository(modelContext: modelContext)
         }
 }
 

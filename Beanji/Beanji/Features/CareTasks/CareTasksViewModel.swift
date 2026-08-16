@@ -11,7 +11,7 @@ import Observation
 @Observable
 @MainActor
 final class CareTasksViewModel {
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
     private let calendar: Calendar
 
     var plants: [Plant] = []
@@ -21,7 +21,7 @@ final class CareTasksViewModel {
     var errorMessage: String?
 
     init(
-        repository: PlantRepository,
+        repository: UserPlantRepository,
         calendar: Calendar = .current
     ) {
         self.repository = repository

@@ -16,7 +16,7 @@ struct BeanjiTests {
     func clearingCatalogSearchShowsAllLocalPlantsAgain() async {
         let viewModel = AllPlantsViewModel(
             catalogService: TestPlantCatalog(),
-            repository: MockPlantRepository()
+            repository: InMemoryUserPlantRepository()
         )
         viewModel.selectedPage = .allPlants
         await viewModel.loadInitialData()

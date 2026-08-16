@@ -144,7 +144,7 @@ struct CareTasksView: View {
 }
 
 #Preview("Care Tasks") {
-    let repository = MockPlantRepository()
+    let repository = InMemoryUserPlantRepository()
     let calendar = Calendar.current
 
     repository.mockPlants = [

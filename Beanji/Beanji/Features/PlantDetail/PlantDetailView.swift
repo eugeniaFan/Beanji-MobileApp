@@ -435,7 +435,7 @@ private struct PlanTile: View {
         PlantDetailView(
             viewModel: PlantDetailViewModel(
                 plant: plant,
-                repository: MockPlantRepository(),
+                repository: InMemoryUserPlantRepository(),
                 plantSpeciesProvider: LocalPlantCatalog()
             )
         )

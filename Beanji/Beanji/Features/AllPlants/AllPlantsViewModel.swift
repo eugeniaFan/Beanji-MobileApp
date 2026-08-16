@@ -27,7 +27,7 @@ enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
 @MainActor
 final class AllPlantsViewModel {
     private let catalogService: PlantCatalogRepository
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
     private let catalogPageSize = 40
 
     // MARK: - State
@@ -48,7 +48,7 @@ final class AllPlantsViewModel {
     private var catalogPage = 1
     private var isSearching = false
     
-    init(catalogService: PlantCatalogRepository, repository: PlantRepository) {
+    init(catalogService: PlantCatalogRepository, repository: UserPlantRepository) {
         self.catalogService = catalogService
         self.repository = repository
     }

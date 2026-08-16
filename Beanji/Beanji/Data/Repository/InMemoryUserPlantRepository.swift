@@ -1,5 +1,5 @@
 //
-//  MockPlantRepository.swift
+//  InMemoryUserPlantRepository.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-final class MockPlantRepository: PlantRepository {
+final class InMemoryUserPlantRepository: UserPlantRepository {
 
     var mockPlants: [Plant] = [
         Plant(

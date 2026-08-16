@@ -93,6 +93,6 @@ struct EditPlantView: View {
     )
 
     EditPlantView(
-        viewModel: EditPlantViewModel(plant: plant, repository: MockPlantRepository())
+        viewModel: EditPlantViewModel(plant: plant, repository: InMemoryUserPlantRepository())
     )
 }

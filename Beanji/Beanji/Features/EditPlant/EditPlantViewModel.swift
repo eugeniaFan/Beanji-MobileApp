@@ -12,7 +12,7 @@ import Observation
 @MainActor
 final class EditPlantViewModel {
     var plant: Plant
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
 
     var name: String
     var location: String
@@ -24,7 +24,7 @@ final class EditPlantViewModel {
 
     var onPlantUpdated: (() -> Void)?
 
-    init(plant: Plant, repository: PlantRepository) {
+    init(plant: Plant, repository: UserPlantRepository) {
         self.plant = plant
         self.repository = repository
 
