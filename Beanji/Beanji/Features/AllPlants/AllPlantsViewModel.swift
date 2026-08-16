@@ -26,12 +26,11 @@ enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
 @Observable
 @MainActor
 final class AllPlantsViewModel {
-    private let catalogService: PlantAPI
+    private let catalogService: PlantCatalogRepository
     private let repository: PlantRepository
-    private let localCatalog = LocalPlantCatalog()
     private let catalogPageSize = 40
 
-    // MARK: States
+    // MARK: - State
     var myPlants: [Plant] = []
     var catalogPlants: [PlantSpecies] = []
     var searchText = ""
@@ -47,15 +46,13 @@ final class AllPlantsViewModel {
 
     let filters = ["Alle", "Drinnen", "Viel Licht", "Schatten"]
     private var catalogPage = 1
-    private var isSearching = false  // Flag to indicate if the user is currently searching in the catalog
-
-    // Dependency Injection
-    init(catalogService: PlantAPI, repository: PlantRepository) {
+    private var isSearching = false
+    
+    init(catalogService: PlantCatalogRepository, repository: PlantRepository) {
         self.catalogService = catalogService
         self.repository = repository
     }
 
-    // factory methods to create editable detail view model for a a plant
     func makeDetailViewModel(
         for plant: Plant,
         onPlantDeleted: (() -> Void)? = nil
@@ -63,7 +60,7 @@ final class AllPlantsViewModel {
         let detailViewModel = PlantDetailViewModel(
             plant: plant,
             repository: repository,
-            plantAPI: catalogService
+            plantSpeciesProvider: catalogService
         )
         detailViewModel.onPlantDeleted = onPlantDeleted
         detailViewModel.onPlantUpdated = { [weak self] in
@@ -73,14 +70,13 @@ final class AllPlantsViewModel {
         return detailViewModel
     }
 
-    // factory method to create a read-only PlantDetailViewModel for a catalog species
     func makeReadOnlySpeciesDetailViewModel(for species: PlantSpecies)
     -> PlantDetailViewModel
     {
         let viewModel = PlantDetailViewModel(
             species: species,
             repository: repository,
-            plantAPI: catalogService
+            plantSpeciesProvider: catalogService
         )
         viewModel.onDidAddToMyPlants = { [weak self] in
             Task { await self?.loadMyPlants() }
@@ -88,18 +84,12 @@ final class AllPlantsViewModel {
         return viewModel
     }
 
-    // factory method to create an AddPlantViewModel for adding a new user plant
-    // func makeAddPlantViewModel() -> AddPlantViewModel { ... }
-
-
-    // Load initial data in the same time for both tabs
     func loadInitialData() async {
         async let ownPlants: () = loadMyPlants()
         async let catalog: () = loadCatalogFromLocal(reset: true)
         _ = await (ownPlants, catalog)
     }
 
-    // Load all plants from "Meine Pflanzen"
     func loadMyPlants() async {
         isLoading = true
         do {
@@ -113,25 +103,22 @@ final class AllPlantsViewModel {
     }
 
     
-    // Triggered when the search text changes. For "Meine Pflanzen", it filters locally.
-    // For "Alle Pflanzen", it reloads the local catalog if the search is cleared
-    // API results are shown when the user submits the search or taps the search button.
+    // Catalog search stays in memory; personal plant search queries persistence.
     func handleSearchTextChanged() async {
         if selectedPage == .myPlants {
-            // Use repository for local search
             await loadMyPlantsFiltered()
-        } else {
-            // if search cleared while API results are shown, reload local catalog
-            let query = searchText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-            if query.isEmpty && isSearching {
+            return
+        }
+        let query = searchText.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        if query.isEmpty && !isSearching {
+            if catalogPlants.isEmpty {
                 await loadCatalogFromLocal(reset: true)
             }
         }
     }
     
-    // Loads myPlants using repository.fetchPlants with search/filter support.
     private func loadMyPlantsFiltered() async {
         isLoading = true
         do {
@@ -152,7 +139,7 @@ final class AllPlantsViewModel {
     }
 
    
-    // Loads catalog from local JSON with pagination.
+    // Pagination keeps larger future catalogs responsive.
     private func loadCatalogFromLocal(reset: Bool) async {
         if reset {
             catalogPage = 1
@@ -163,9 +150,13 @@ final class AllPlantsViewModel {
 
         guard canLoadMoreCatalog, !isCatalogLoading else { return }
         isCatalogLoading = true
+        
+        defer {
+                isCatalogLoading = false
+            }
 
         do {
-            let pagePlants = try await localCatalog.searchPlants(
+            let pagePlants = try await catalogService.searchPlants(
                 matching: "",
                 page: catalogPage,
                 perPage: catalogPageSize
@@ -187,7 +178,6 @@ final class AllPlantsViewModel {
             errorMessage =
             "Fehler beim Laden des Pflanzenkatalogs: \(error.localizedDescription)"
         }
-        isCatalogLoading = false
     }
 
     private func refreshCatalogPlants(_ plants: [PlantSpecies]) async -> [PlantSpecies] {
@@ -221,37 +211,18 @@ final class AllPlantsViewModel {
         )
     }
 
-    // Triggered by submit/button – performs HTTP API search for the catalog tab.
+    // Ensures catalog data is available when search is submitted.
     func performApiSearch() async {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return }
-        guard !isCatalogLoading else { return }
-
-        isCatalogLoading = true
-        isSearching = true
-        catalogPage = 1
-
-        do {
-            let results = try await catalogService.searchPlants(
-                matching: query,
-                page: 1,
-                perPage: catalogPageSize
-            )
-
-            catalogPlants = results
-            canLoadMoreCatalog = results.count == catalogPageSize
-            
-            if canLoadMoreCatalog {
-                catalogPage = 2
-            }
-            errorMessage = nil
-        } catch {
-            errorMessage = "Fehler bei der Suche: \(error.localizedDescription)"
+        guard selectedPage == .allPlants else { return }
+        isSearching = false
+        
+        // Preserve the full catalog because filteredCatalogPlants owns filtering.
+        if catalogPlants.isEmpty {
+            await loadCatalogFromLocal(reset: true)
         }
-        isCatalogLoading = false
+        errorMessage = nil
     }
 
-    // Loads the next catalog page when the last visible card appears (local pagination only).
     func loadNextCatalogPageIfNeeded(current species: PlantSpecies) async {
         guard selectedPage == .allPlants else { return }
         guard !isSearching else { return }
@@ -271,7 +242,6 @@ final class AllPlantsViewModel {
         }
     }
     
-    // Delete one plant
     func deletePlant(_ plant: Plant) async {
         isLoading = true
         do {
@@ -285,7 +255,6 @@ final class AllPlantsViewModel {
         isLoading = false
     }
     
-    // Add a catalog species to "Meine Pflanzen" with optional user-defined name
     func addSpeciesToMyPlants(_ species: PlantSpecies, userPlantName: String?) async {
         do {
             _ = try await repository.addSpeciesToMyPlants(
@@ -310,7 +279,6 @@ final class AllPlantsViewModel {
         if isSearching {
             return afterFilter
         }
-        // Local text filter for catalog when not in API-search mode
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return afterFilter }
         return afterFilter.filter {

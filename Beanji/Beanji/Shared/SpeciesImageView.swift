@@ -23,13 +23,11 @@ struct SpeciesImageView: View {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):
-                        // Success state
                         image
                             .resizable()
                             .scaledToFill()
 
                     case .failure:
-                        // Error state
                         Color.red.opacity(0.2)
                             .overlay {
                                 Image(systemName: errorIcon)
@@ -38,7 +36,6 @@ struct SpeciesImageView: View {
                             }
 
                     case .empty:
-                        // Loading state
                         Color.green.opacity(0.1)
                         ProgressView()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -53,7 +50,6 @@ struct SpeciesImageView: View {
                     }
                 }
             } else {
-                // Placeholder state
                 Color.green.opacity(0.1)
                 Image(systemName: placeholderIcon)
                     .font(.system(size: 48))

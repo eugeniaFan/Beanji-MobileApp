@@ -4,8 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 22.06.26.
 //
-//  MARK: Local JSON-Model for one plantCatalog enrty.
-//  Describes structur of the bundled plantsCatalog.json and Perenual API response for a plant species.
+//  Represents species data shared by local and optional remote providers.
 
 import Foundation
 

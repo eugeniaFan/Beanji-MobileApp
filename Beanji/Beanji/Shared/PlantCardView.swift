@@ -1,5 +1,5 @@
 //
-//  PlantCard.swift
+//  PlantCardView.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 23.06.26.
@@ -22,7 +22,6 @@ struct PlantCardView: View {
                 PlantImageView(plant: plant)
                 HStack(alignment: .top) {
                     HStack (spacing: 4) {
-                        // Water badge
                         Image(systemName: "drop.fill")
                             .foregroundStyle(.white)
                         Text(nextWateringText(for: plant))

@@ -10,7 +10,6 @@ import Foundation
 struct CareTask: Identifiable {
     enum Kind: Equatable{
         case watering
-        // later: case fertilizing
     }
 
     let plant: Plant

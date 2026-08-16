@@ -17,14 +17,13 @@ enum PlantDetailMode {
 @MainActor
 final class PlantDetailViewModel {
     private let repository: PlantRepository
-    private let plantAPI: PlantAPI?
+    private let plantSpeciesProvider: PlantSpeciesProvider?
     private let calendar: Calendar
 
     let mode: PlantDetailMode
     
     // MARK: - Callbacks
     
-    // Callbacks for notifying the view about certain events
     var onPlantDeleted: (() -> Void)?
     var onDidAddToMyPlants: (() -> Void)?
     var onEditRequested: ((Plant) -> Void)?
@@ -49,24 +48,24 @@ final class PlantDetailViewModel {
     init(
         plant: Plant,
         repository: PlantRepository,
-        plantAPI: PlantAPI?,
+        plantSpeciesProvider: PlantSpeciesProvider?,
         calendar: Calendar = .current
     ) {
         self.mode = .editablePlant(plant)
         self.repository = repository
-        self.plantAPI = plantAPI
+        self.plantSpeciesProvider = plantSpeciesProvider
         self.calendar = calendar
     }
 
     init(
         species: PlantSpecies,
         repository: PlantRepository,
-        plantAPI: PlantAPI? = nil,
+        plantSpeciesProvider: PlantSpeciesProvider? = nil,
         calendar: Calendar = .current
     ) {
         self.mode = .readOnlySpecies(species)
         self.repository = repository
-        self.plantAPI = plantAPI
+        self.plantSpeciesProvider = plantSpeciesProvider
         self.calendar = calendar
     }
 
@@ -79,7 +78,7 @@ final class PlantDetailViewModel {
         return editViewModel
     }
 
-    // MARK: - Basisdata
+    // MARK: - Base Data
 
     var editablePlant: Plant? {
         if case .editablePlant(let plant) = mode {
@@ -140,14 +139,13 @@ final class PlantDetailViewModel {
         return trimmed
     }
     
-    // Description of the plant species, trimmed of whitespace and newlines. Returns nil if the description is empty or not present.
     var descriptionText: String? {
         let trimmed = species.description?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let trimmed, !trimmed.isEmpty else { return nil }
         return trimmed
     }
 
-    // MARK: - Idealbedingungen
+    // MARK: - Ideal Conditions
 
     var wateringConditionText: String {
         if let plant = editablePlant {
@@ -183,9 +181,9 @@ final class PlantDetailViewModel {
             .replacingOccurrences(of: "\"", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    // MARK: - Pflegeplan
+    // MARK: - Care Plan
     
-    // Only editable plants have a real care plan – catalog species do not have a `lastWatered` yet.
+    // Catalog species have no personal watering history.
 
     var hasCarePlan: Bool {
         editablePlant != nil
@@ -202,7 +200,7 @@ final class PlantDetailViewModel {
         return "Alle \(plant.wateringIntervalDays) Tage"
     }
 
-    // Permissions
+    // MARK: - Permissions
     var canEdit: Bool {
         if case .editablePlant = mode { return true }
         return false
@@ -219,12 +217,12 @@ final class PlantDetailViewModel {
 
     func loadFullDetail() async {
         guard case .readOnlySpecies(let baseSpecies) = mode else { return }
-        guard let plantAPI else { return }
+        guard let plantSpeciesProvider else { return }
         isLoading = true
         do {
-            enrichedSpecies = try await plantAPI.getPlantDetail(id: baseSpecies.speciesId)
-        }
-        catch {
+            enrichedSpecies = try await plantSpeciesProvider.getPlantDetail(id: baseSpecies.speciesId)
+            errorMessage = nil
+        } catch {
             errorMessage = "Detailinformationen konnten nicht geladen werden: \(error.localizedDescription)"
         }
         isLoading = false

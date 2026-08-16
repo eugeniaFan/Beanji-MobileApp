@@ -4,9 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 26.06.26.
 //
-// MARK: SwiftData Model: PlantSpeciesInfo 
-// is used to store the plant species information in the local database using SwiftData. It is linked to the Plant model via a relationship.
-// the information will be shown in the detail view of the plant, and it can be refreshed from the API if needed.
+//  Stores reusable species details for a saved plant.
 
 import SwiftData
 import Foundation
@@ -45,7 +43,6 @@ final class PlantSpeciesInfo: Identifiable, Hashable {
         self.lastRefreshAt = Date()
     }
     
-    //  Update the PlantSpeciesInfo with new data from a PlantSpecies instance
     func update(from species: PlantSpecies) {
         commonName = species.commonName
         scientificName = species.scientificName

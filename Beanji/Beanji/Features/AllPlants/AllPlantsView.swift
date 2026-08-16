@@ -1,5 +1,5 @@
 //
-//  AllPlants.swift
+//  AllPlantsView.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 11.06.26.
@@ -13,7 +13,6 @@ struct AllPlantsView: View {
     @State private var viewModel: AllPlantsViewModel
 
     init(viewModel: AllPlantsViewModel) {
-        // Initializes the @State storage with the injected ViewModel
         _viewModel = State(initialValue: viewModel)
     }
 
@@ -34,7 +33,7 @@ struct AllPlantsView: View {
                 filterChips
                 Divider()
 
-                // MARK: Swipeable Plant Pages
+                // MARK: - Plant Pages
 
                 TabView(selection: $viewModel.selectedPage) {
                     myPlantsGrid
@@ -305,7 +304,7 @@ struct AllPlantsView: View {
 #Preview {
     AllPlantsView(
         viewModel: AllPlantsViewModel(
-            catalogService: MockPlantAPI(),
+            catalogService: PreviewPlantProvider(),
             repository: MockPlantRepository()
         )
     )

@@ -4,7 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
 //
-//  MARK: Protocol for real persistent user plant data
+//  Defines persistence operations for the user's plants.
 
 import Foundation
 
@@ -19,5 +19,5 @@ protocol PlantRepository {
     func deletePlant(_ plant: Plant) async throws
     func updatePlant(_ plant: Plant) async throws
     
-    func refreshPlantSpeciesInfo(for plant: Plant, plantAPI: PlantAPI) async throws
+    func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider) async throws
 }

@@ -4,7 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
 //
-//  MARK: Mockdata for Preview & Testing
+//  In-memory repository for previews and tests.
 
 import Foundation
 
@@ -76,12 +76,10 @@ final class MockPlantRepository: PlantRepository {
     ]
 
     
-    // Getting all plants, sorted in decending order by creation date (newest first)
     func fetchAllPlants() async throws -> [Plant] {
         return mockPlants.sorted { $0.createdAt > $1.createdAt }
     }
 
-    // Fetches plants based on search text and filter criteria.
     func fetchPlants(searchText: String?, filter: String?) async throws
         -> [Plant]
     {
@@ -97,12 +95,10 @@ final class MockPlantRepository: PlantRepository {
         return result
     }
 
-    // Saves new plant to the mock repository
     func savePlant(_ plant: Plant) async throws {
         mockPlants.append(plant)
     }
 
-    // Adds new plant to the mock repository based on the selected species and userprovided name
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws
         -> Plant
     {
@@ -125,12 +121,10 @@ final class MockPlantRepository: PlantRepository {
         return plant
     }
 
-    //  Deletes plant from the mock repository
     func deletePlant(_ plant: Plant) async throws {
         mockPlants.removeAll { $0.id == plant.id }
     }
 
-    // Updates an existing plant in the mock repository
     func updatePlant(_ plant: Plant) async throws {
         guard let index = mockPlants.firstIndex(where: { $0.id == plant.id })
         else { return }
@@ -138,9 +132,9 @@ final class MockPlantRepository: PlantRepository {
     }
 
     
-    func refreshPlantSpeciesInfo(for plant: Plant, plantAPI: PlantAPI)
+    func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider)
         async throws
     {
-        // TODO: need to be implemented for mock repository, but not needed for now
+        // In-memory data intentionally skips provider refreshes.
     }
 }

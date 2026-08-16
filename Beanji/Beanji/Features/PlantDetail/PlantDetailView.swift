@@ -260,7 +260,7 @@ struct PlantDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Beschreibung
+    // MARK: - Description
 
     private func descriptionSection(_ description: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -287,7 +287,7 @@ struct PlantDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Idealbedingungen
+    // MARK: - Ideal Conditions
 
     private var conditionsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -328,7 +328,7 @@ struct PlantDetailView: View {
             }
         }
     }
-    // MARK: - Pflegeplan
+    // MARK: - Care Plan
 
     private var carePlanSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -436,7 +436,7 @@ private struct PlanTile: View {
             viewModel: PlantDetailViewModel(
                 plant: plant,
                 repository: MockPlantRepository(),
-                plantAPI: LocalPlantCatalog()
+                plantSpeciesProvider: LocalPlantCatalog()
             )
         )
     }
