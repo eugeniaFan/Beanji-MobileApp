@@ -1,17 +1,15 @@
 //
-//  MockPlantAPI.swift
+//  PreviewPlantProvider.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 13.06.26.
 //
-//  MARK: Mock Data for Testing
+//  Provides stable sample data for SwiftUI previews.
 
 import Foundation
 
-struct MockPlantAPI: PlantAPI {
+struct PreviewPlantProvider: PlantCatalogRepository {
     
-    // static for ressource sharing across instances,
-    // and to avoid reinitializing the same data for each instance of MockPlantAPI.
     static let samplePlants: [PlantSpecies] = [
         PlantSpecies(
             speciesId: 1,
@@ -95,18 +93,28 @@ struct MockPlantAPI: PlantAPI {
 
     // Searches the mock plants by common or scientific name.
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
-        guard !query.isEmpty else { return Self.samplePlants }
+        let trimmedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !trimmedQuery.isEmpty else {
+            return Self.samplePlants
+        }
+      
         return Self.samplePlants.filter {
-            $0.commonName.localizedCaseInsensitiveContains(query) == true ||
-            $0.scientificName.localizedCaseInsensitiveContains(query) == true
+            $0.commonName.localizedCaseInsensitiveContains(trimmedQuery)
+            || $0.scientificName.localizedCaseInsensitiveContains(trimmedQuery)
         }
     }
 
     // Returns the mock plant with the matching ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
-        guard let plant = Self.samplePlants.first(where: { $0.speciesId == id }) else {
+        guard let plant = Self.samplePlants.first(
+            where: { $0.speciesId == id }
+        ) else {
             throw LocalPlantCatalogError.plantNotFound
         }
+        
         return plant
     }
 }

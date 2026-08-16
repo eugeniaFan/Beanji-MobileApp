@@ -47,7 +47,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environment(\.plantAPI, MockPlantAPI())
+        .environment(\.plantAPI, PreviewPlantProvider())
         .environment(\.makePlantRepository) { _ in
             MockPlantRepository()
         }

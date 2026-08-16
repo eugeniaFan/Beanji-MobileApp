@@ -305,7 +305,7 @@ struct AllPlantsView: View {
 #Preview {
     AllPlantsView(
         viewModel: AllPlantsViewModel(
-            catalogService: MockPlantAPI(),
+            catalogService: PreviewPlantProvider(),
             repository: MockPlantRepository()
         )
     )
