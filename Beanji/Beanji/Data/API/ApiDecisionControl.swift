@@ -6,14 +6,14 @@
 //
 //  MARK: ApiDecisionControl
 //  Fallback mechanism for plant API calls.
-//  If the primary API fails, it falls back to a local catalog.
+//  The remote API must be configured explicitly.
 
 struct ApiDecisionControl: PlantAPI {
     private let primaryAPI: PlantAPI
     private let fallbackAPI: PlantAPI
 
     init(
-        primaryAPI: PlantAPI = HttpPlantAPI(apiKey: APIKey.perenualAPIKey),
+        primaryAPI: PlantAPI,
         fallbackAPI: PlantAPI = LocalPlantCatalog()
     ) {
         self.primaryAPI = primaryAPI

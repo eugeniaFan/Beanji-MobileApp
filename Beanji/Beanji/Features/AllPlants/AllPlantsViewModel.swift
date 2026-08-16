@@ -111,9 +111,8 @@ final class AllPlantsViewModel {
     }
 
     
-    // Triggered when the search text changes. For "Meine Pflanzen", it filters locally.
-    // For "Alle Pflanzen", it reloads the local catalog if the search is cleared
-    // API results are shown when the user submits the search or taps the search button.
+    // For "Meine Pflanzen", it filters locally.
+    // For "Alle Pflanzen", it reloads the local catalog if the search is cleared.
     func handleSearchTextChanged() async {
         if selectedPage == .myPlants {
             // Use repository for local search
