@@ -4,99 +4,107 @@
 //
 //  Created by Eugenia Fanenstiel on 22.06.26.
 //
-//  Mock implementation of the Perenual API.
-//  Loads local data JSON
-
+//  Loads local data from JSON
 
 import Foundation
 
-enum LocalPlantCatalogError: Error {
+enum LocalPlantCatalogError: LocalizedError {
     case fileNotFound
     case decodingError
     case plantNotFound
+
+    var errorDescription: String? {
+        switch self {
+        case .fileNotFound:
+            return "JSON File could not be found."
+        case .decodingError:
+            return "Failed to decode data from JSON file."
+        case .plantNotFound:
+            return "Requested plant could not be found in the local catalog."
+        }
+    }
 }
 
 struct LocalPlantCatalog: PlantAPI {
-    private let fileName = "plantsCatalog"
+    private let fileName = "houseplants"
     private let fileExtension = "json"
-    
-    
+
     // Searches local catalog by common or scientific name.
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
-        let allPlants = try await getAllPlants()
-        guard !query.isEmpty else { return allPlants }
-        
-        return allPlants.filter {
-            $0.commonName.localizedCaseInsensitiveContains(query) == true ||
-            $0.scientificName.localizedCaseInsensitiveContains(query) == true
+        let allPlants = try getAllPlants()
+        let trimmedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !trimmedQuery.isEmpty else { return allPlants }
+
+        return allPlants.filter { plant in
+            plant.commonName.localizedCaseInsensitiveContains(trimmedQuery)
+                || plant.scientificName.localizedCaseInsensitiveContains(
+                    trimmedQuery
+                )
         }
     }
-    
-    
+
     // Loads and decodes the JSON file.
-    func getAllPlants() async throws -> [PlantSpecies] {
-        // Try the straightforward bundle lookup first
-        if let url = Bundle.main.url(forResource: fileName, withExtension: fileExtension) {
-            do {
-                let data = try Data(contentsOf: url, options: .mappedIfSafe)
-                return try JSONDecoder().decode([PlantSpecies].self, from: data)
-            } catch {
-                throw LocalPlantCatalogError.decodingError
-            }
+    private func getAllPlants() throws -> [PlantSpecies] {
+        // Try the straightforward bundle lookup
+        guard let fileURL = Bundle.main.url(
+            forResource: fileName,
+            withExtension: fileExtension
+        ) else {
+            throw LocalPlantCatalogError.fileNotFound
         }
-
-        // Fallback: search the bundle resource folder recursively for the file.
-        // This helps when the file wasn't added to Copy Bundle Resources in Xcode
-        // or resides in a nested folder.
-        if let resourceURL = Bundle.main.resourceURL {
-            let fm = FileManager.default
-            let enumerator = fm.enumerator(at: resourceURL, includingPropertiesForKeys: nil)
-            while let element = enumerator?.nextObject() as? URL {
-                if element.lastPathComponent == "\(fileName).\(fileExtension)" {
-                    do {
-                        let data = try Data(contentsOf: element, options: .mappedIfSafe)
-                        return try JSONDecoder().decode([PlantSpecies].self, from: data)
-                    } catch {
-                        throw LocalPlantCatalogError.decodingError
-                    }
-                }
-            }
+        
+        do {
+            let data = try Data(
+                contentsOf: fileURL,
+                options: .mappedIfSafe
+            )
+            
+            return try JSONDecoder().decode(
+                [PlantSpecies].self,
+                from: data
+            )
+        } catch {
+            // If we get here, the file couldn't be found in the bundle.
+            throw LocalPlantCatalogError.decodingError
         }
-
-        // If we get here, the file couldn't be found in the bundle.
-        throw LocalPlantCatalogError.fileNotFound
     }
+        
 
     
     // Returns detailed plant info for a specific ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
-        let allPlants = try await getAllPlants()
-        
+        let allPlants = try getAllPlants()
+
         guard let plant = allPlants.first(where: { $0.id == id }) else {
             throw LocalPlantCatalogError.plantNotFound
         }
+        
         return plant
     }
-    
-    func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies] {
-        let allPlants = try await getAllPlants()
 
+    
+    // Searches the local catalog and returns one page of results.
+    func searchPlants(
+        matching query: String,
+        page: Int,
+        perPage: Int
+    ) async throws -> [PlantSpecies] {
+        guard page > 0, perPage > 0 else { return [] }
+        
         // Filter by query
-        let filteredPlants: [PlantSpecies]
-        if query.isEmpty {
-            filteredPlants = allPlants
-        } else {
-            filteredPlants = allPlants.filter {
-                $0.commonName.localizedCaseInsensitiveContains(query) ||
-                $0.scientificName.localizedCaseInsensitiveContains(query)
-            }
-        }
-        
+        let filteredPlants = try await searchPlants(matching: query)
+    
         // Pagination
-        let start = (page - 1) * perPage
-        guard start < filteredPlants.count else { return [] }
-        
-        let end = min(start + perPage, filteredPlants.count)
-        return Array(filteredPlants[start..<end])
+        let startIndex = (page - 1) * perPage
+        guard startIndex < filteredPlants.count else { return [] }
+
+        let endIndex = min(
+            startIndex + perPage,
+            filteredPlants.count
+        )
+        return Array(filteredPlants[startIndex..<endIndex])
     }
 }

@@ -1,0 +1,59 @@
+[
+  {
+    "id": 1,
+    "commonName": "Swiss Cheese Plant",
+    "scientificName": "Monstera deliciosa",
+    "watering": "Average",
+    "wateringFrequency": {
+      "unit": "days",
+      "value": "7"
+    },
+    "sunlight": [
+      "bright indirect light",
+      "medium indirect light"
+    ],
+    "maintenance": "Moderate",
+    "indoor": true,
+    "imageUrl": null,
+    "careLevel": "Easy",
+    "description": "A tropical houseplant known for its large green leaves and naturally developing leaf openings."
+  },
+  {
+    "id": 2,
+    "commonName": "Snake Plant",
+    "scientificName": "Dracaena trifasciata",
+    "watering": "Minimum",
+    "wateringFrequency": {
+      "unit": "days",
+      "value": "14"
+    },
+    "sunlight": [
+      "bright indirect light",
+      "low light"
+    ],
+    "maintenance": "Low",
+    "indoor": true,
+    "imageUrl": null,
+    "careLevel": "Easy",
+    "description": "A resilient houseplant with upright leaves that tolerates a wide range of indoor light conditions."
+  },
+  {
+    "id": 3,
+    "commonName": "Golden Pothos",
+    "scientificName": "Epipremnum aureum",
+    "watering": "Average",
+    "wateringFrequency": {
+      "unit": "days",
+      "value": "8"
+    },
+    "sunlight": [
+      "bright indirect light",
+      "medium indirect light"
+    ],
+    "maintenance": "Low",
+    "indoor": true,
+    "imageUrl": null,
+    "careLevel": "Easy",
+    "description": "A trailing houseplant with heart-shaped leaves that adapts well to common indoor environments."
+  }
+]

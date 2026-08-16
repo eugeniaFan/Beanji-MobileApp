@@ -118,12 +118,14 @@ final class AllPlantsViewModel {
         if selectedPage == .myPlants {
             // Use repository for local search
             await loadMyPlantsFiltered()
-        } else {
-            // if search cleared while API results are shown, reload local catalog
-            let query = searchText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-            if query.isEmpty && isSearching {
+            return
+        }
+        // if search cleared while API results are shown, reload local catalog
+        let query = searchText.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        if query.isEmpty && !isSearching {
+            if catalogPlants.isEmpty {
                 await loadCatalogFromLocal(reset: true)
             }
         }
@@ -224,32 +226,15 @@ final class AllPlantsViewModel {
 
     // Triggered by submit/button – performs HTTP API search for the catalog tab.
     func performApiSearch() async {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return }
-        guard !isCatalogLoading else { return }
-
-        isCatalogLoading = true
-        isSearching = true
-        catalogPage = 1
-
-        do {
-            let results = try await catalogService.searchPlants(
-                matching: query,
-                page: 1,
-                perPage: catalogPageSize
-            )
-
-            catalogPlants = results
-            canLoadMoreCatalog = results.count == catalogPageSize
-            
-            if canLoadMoreCatalog {
-                catalogPage = 2
-            }
-            errorMessage = nil
-        } catch {
-            errorMessage = "Fehler bei der Suche: \(error.localizedDescription)"
+        guard selectedPage == .allPlants else { return }
+        isSearching = false
+        
+        // The local catalog is already loaded completely.
+        // Search results are provided by filteredCatalogPlants, so catalogPlants must not be replaced here.
+        if catalogPlants.isEmpty {
+            await loadCatalogFromLocal(reset: true)
         }
-        isCatalogLoading = false
+        errorMessage = nil
     }
 
     // Loads the next catalog page when the last visible card appears (local pagination only).
