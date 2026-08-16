@@ -9,7 +9,7 @@
 
 import Foundation
 
-protocol PlantAPI {
+protocol PlantSpeciesProvider {
 
     // Searches for plant species matching a query string
     func searchPlants(matching query: String) async throws -> [PlantSpecies]
@@ -22,10 +22,11 @@ protocol PlantAPI {
 
 }
 
-extension PlantAPI {
+extension PlantSpeciesProvider {
     func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies] {
         let all = try await searchPlants(matching: query)
-        guard page > 0, perPage > 0 else { return all }
+        
+        guard page > 0, perPage > 0 else { return [] }
 
         let start = (page - 1) * perPage
         guard start < all.count else { return [] }
@@ -34,3 +35,10 @@ extension PlantAPI {
         return Array(all[start..<end])
     }
 }
+
+// A catalog repository provides plant species used for browsing and search.
+protocol PlantCatalogRepository: PlantSpeciesProvider {}
+
+// Temporary compatibility name for existing API-related code.
+// Existing call sites will be migrated in separate, small steps.
+typealias PlantAPI = PlantSpeciesProvider

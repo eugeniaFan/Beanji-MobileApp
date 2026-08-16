@@ -25,7 +25,7 @@ enum LocalPlantCatalogError: LocalizedError {
     }
 }
 
-struct LocalPlantCatalog: PlantAPI {
+struct LocalPlantCatalog: PlantSpeciesProvider {
     private let fileName = "houseplants"
     private let fileExtension = "json"
 
@@ -78,7 +78,9 @@ struct LocalPlantCatalog: PlantAPI {
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
         let allPlants = try getAllPlants()
 
-        guard let plant = allPlants.first(where: { $0.id == id }) else {
+        guard let plant = allPlants.first(
+            where: { $0.id == id }
+        ) else {
             throw LocalPlantCatalogError.plantNotFound
         }
         
