@@ -4,8 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 10.06.26.
 //
-//  MARK: SwiftData Model: Plant
-//  Describes a plant, which the user actually saved.
+//  Stores a plant saved by the user.
 
 import Foundation
 import SwiftData
@@ -30,7 +29,8 @@ class Plant: Identifiable{
     var photoData: Data?
     var location: String? = nil
     
-    @Relationship(inverse: \PlantSpeciesInfo.plant)     // One to one relation
+    // Saved plants reference shared species metadata.
+    @Relationship(inverse: \PlantSpeciesInfo.plant)
     var speciesInfo: PlantSpeciesInfo? = nil
     
     
@@ -63,11 +63,9 @@ class Plant: Identifiable{
 
 //  MARK: - Shared watering schedule logic
 
-//  Centralizes the "when is this plant due for watering" calculation so
-//  ViewModels don't each reimplement the same date math.
+//  Centralized so every feature uses the same watering calculation.
 extension Plant {
 
-    // The next date this plant is due to be watered, based on `lastWatered` and `wateringIntervalDays`.
     func nextWateringDate(using calendar: Calendar = .current) -> Date {
         calendar.date(
             byAdding: .day,
@@ -76,8 +74,7 @@ extension Plant {
         ) ?? lastWatered
     }
 
-    // Number of days from `referenceDate` until the plant's next watering is due.
-    // A negative value means the plant is overdue by that many days.
+    // Negative values indicate how many days the plant is overdue.
     func daysUntilNextWatering(
         using calendar: Calendar = .current,
         referenceDate: Date = Date()

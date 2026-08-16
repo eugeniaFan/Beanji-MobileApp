@@ -4,7 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 25.06.26.
 //
-//  MARK: holds ModelContext, talks to SwiftData
+//  Persists the user's plants with SwiftData.
 
 import Foundation
 import SwiftData
@@ -20,7 +20,6 @@ final class SwiftDataPlantRepository: PlantRepository {
     
     // MARK: - Public Fetch Methods
     
-    // Fetches all plants, ordered by creation date (newest first).
     func fetchAllPlants() async throws -> [Plant] {
         let descriptor = FetchDescriptor<Plant>(sortBy: [
             SortDescriptor(\.createdAt, order: .reverse)
@@ -46,7 +45,6 @@ final class SwiftDataPlantRepository: PlantRepository {
 
     // MARK: - CRUD Operations
     
-    // TODO: more error handling and check for asyn operations
     func savePlant(_ plant: Plant) async throws {
         modelContext.insert(plant)
         try modelContext.save()
@@ -61,11 +59,10 @@ final class SwiftDataPlantRepository: PlantRepository {
         try modelContext.save()
     }
     
-    // Creates or updates a PlantSpeciesInfo entity in SwiftData and associates it with the new Plant
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws -> Plant {
        
         let speciesInfo = try upsertSpeciesInfo(from: species)
-        // Download image data so it is available offline in "Meine Pflanzen"
+        // Cache remote images so saved plants remain available offline.
                 var photoData: Data? = nil
                 if let imageUrlString = species.imageUrl, let imageUrl = URL(string: imageUrlString) {
                     photoData = try? await URLSession.shared.data(from: imageUrl).0
@@ -93,24 +90,20 @@ final class SwiftDataPlantRepository: PlantRepository {
         return plant
     }
         
-    // Finds existing species info or creates a new one.
     private func upsertSpeciesInfo(from species: PlantSpecies) throws -> PlantSpeciesInfo {
         let speciesId = species.speciesId
         
-        // Check if a PlantSpeciesInfo object already exists in SwiftData
         let descriptor = FetchDescriptor<PlantSpeciesInfo>(
             predicate: #Predicate<PlantSpeciesInfo> { info in
                 info.speciesInfoId == speciesId
             }
         )
         
-        // Update existing PlantSpeciesInfo Object with same speciesId
         if let existingInfo = try modelContext.fetch(descriptor).first {
             existingInfo.update(from: species)
             return existingInfo
         }
         
-        // Create a new PlantSpeciesInfo Object and insert it into SwiftData
         let newInfo = PlantSpeciesInfo(from: species)
         modelContext.insert(newInfo)
         return newInfo
@@ -144,9 +137,7 @@ final class SwiftDataPlantRepository: PlantRepository {
     }
 
     
-    // MARK: - Refresh method
-    
-    // This method fetches the latest species info from the API and updates the local database.
+    // MARK: - Species Refresh
     func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider) async throws {
         guard let plantSpeciesInfo = plant.speciesInfo else { return }
         

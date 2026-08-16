@@ -10,18 +10,16 @@ import Foundation
 
 protocol PlantSpeciesProvider {
 
-    // Searches for plant species matching a query string
     func searchPlants(matching query: String) async throws -> [PlantSpecies]
 
-    // Paginierte Suche (Prio 2): HTTP kann echte Seiten laden, lokale Quellen nutzen den Default unten.
     func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies]
 
-    // Fetches detailed information for a specific plant by ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies
 
 }
 
 extension PlantSpeciesProvider {
+    // Local providers get in-memory pagination by default.
     func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies] {
         let allPlants = try await searchPlants(matching: query)
         

@@ -24,7 +24,6 @@ final class PlantDetailViewModel {
     
     // MARK: - Callbacks
     
-    // Callbacks for notifying the view about certain events
     var onPlantDeleted: (() -> Void)?
     var onDidAddToMyPlants: (() -> Void)?
     var onEditRequested: ((Plant) -> Void)?
@@ -79,7 +78,7 @@ final class PlantDetailViewModel {
         return editViewModel
     }
 
-    // MARK: - Basisdata
+    // MARK: - Base Data
 
     var editablePlant: Plant? {
         if case .editablePlant(let plant) = mode {
@@ -140,14 +139,13 @@ final class PlantDetailViewModel {
         return trimmed
     }
     
-    // Description of the plant species, trimmed of whitespace and newlines. Returns nil if the description is empty or not present.
     var descriptionText: String? {
         let trimmed = species.description?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let trimmed, !trimmed.isEmpty else { return nil }
         return trimmed
     }
 
-    // MARK: - Idealbedingungen
+    // MARK: - Ideal Conditions
 
     var wateringConditionText: String {
         if let plant = editablePlant {
@@ -183,9 +181,9 @@ final class PlantDetailViewModel {
             .replacingOccurrences(of: "\"", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    // MARK: - Pflegeplan
+    // MARK: - Care Plan
     
-    // Only editable plants have a real care plan – catalog species do not have a `lastWatered` yet.
+    // Catalog species have no personal watering history.
 
     var hasCarePlan: Bool {
         editablePlant != nil
@@ -202,7 +200,7 @@ final class PlantDetailViewModel {
         return "Alle \(plant.wateringIntervalDays) Tage"
     }
 
-    // Permissions
+    // MARK: - Permissions
     var canEdit: Bool {
         if case .editablePlant = mode { return true }
         return false

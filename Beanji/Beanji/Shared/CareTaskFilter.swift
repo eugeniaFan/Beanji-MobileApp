@@ -16,8 +16,7 @@ enum CareTaskFilter: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
-// Shared, localized "due" text used by any care-related view that needs to describe
-// how many days remain (or have passed) until a task is due.
+// Keeps due-date wording consistent across care views.
 enum CareDueTextFormatter {
     static func text(daysUntilDue days: Int, dueDate: Date) -> String {
         switch days {

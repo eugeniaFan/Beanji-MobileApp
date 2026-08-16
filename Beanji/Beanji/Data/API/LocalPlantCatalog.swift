@@ -1,10 +1,10 @@
 //
-//  LocalPlantCatalogAPI.swift
+//  LocalPlantCatalog.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 22.06.26.
 //
-//  Loads local data from JSON
+//  Loads bundled houseplant data from JSON.
 
 import Foundation
 
@@ -29,7 +29,6 @@ struct LocalPlantCatalog: PlantCatalogRepository {
     private let fileName = "houseplants"
     private let fileExtension = "json"
 
-    // Searches local catalog by common or scientific name.
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
         let allPlants = try getAllPlants()
         let trimmedQuery = query.trimmingCharacters(
@@ -46,9 +45,7 @@ struct LocalPlantCatalog: PlantCatalogRepository {
         }
     }
 
-    // Loads and decodes the JSON file.
     private func getAllPlants() throws -> [PlantSpecies] {
-        // Try the straightforward bundle lookup
         guard let fileURL = Bundle.main.url(
             forResource: fileName,
             withExtension: fileExtension
@@ -67,14 +64,12 @@ struct LocalPlantCatalog: PlantCatalogRepository {
                 from: data
             )
         } catch {
-            // If we get here, the file couldn't be found in the bundle.
             throw LocalPlantCatalogError.decodingError
         }
     }
         
 
     
-    // Returns detailed plant info for a specific ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
         let allPlants = try getAllPlants()
 
@@ -88,7 +83,6 @@ struct LocalPlantCatalog: PlantCatalogRepository {
     }
 
     
-    // Searches the local catalog and returns one page of results.
     func searchPlants(
         matching query: String,
         page: Int,
@@ -96,10 +90,8 @@ struct LocalPlantCatalog: PlantCatalogRepository {
     ) async throws -> [PlantSpecies] {
         guard page > 0, perPage > 0 else { return [] }
         
-        // Filter by query
         let filteredPlants = try await searchPlants(matching: query)
     
-        // Pagination
         let startIndex = (page - 1) * perPage
         guard startIndex < filteredPlants.count else { return [] }
 

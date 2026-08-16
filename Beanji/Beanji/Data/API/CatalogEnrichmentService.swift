@@ -4,8 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 29.06.26.
 //
-//  Provides optional plant information from a remote data source.
-//  Remote requests are only made when a caller explicitly starts them.
+//  Remote data is requested only after an explicit user action.
 
 struct CatalogEnrichmentService: PlantSpeciesProvider {
     private let remoteProvider: PlantSpeciesProvider

@@ -91,7 +91,6 @@ struct PreviewPlantProvider: PlantCatalogRepository {
         )
     ]
 
-    // Searches the mock plants by common or scientific name.
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
         let trimmedQuery = query.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -107,7 +106,6 @@ struct PreviewPlantProvider: PlantCatalogRepository {
         }
     }
 
-    // Returns the mock plant with the matching ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
         guard let plant = Self.samplePlants.first(
             where: { $0.speciesId == id }

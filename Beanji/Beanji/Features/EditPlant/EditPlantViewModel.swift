@@ -22,7 +22,6 @@ final class EditPlantViewModel {
     var isSaving = false
     var errorMessage: String?
 
-    // Callback invoked after a successful update
     var onPlantUpdated: (() -> Void)?
 
     init(plant: Plant, repository: PlantRepository) {
@@ -70,4 +69,3 @@ final class EditPlantViewModel {
         _ = await save()
     }
 }
-

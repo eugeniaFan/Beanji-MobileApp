@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-// Central place for app-wide dependency injection
+// Production dependencies are assembled at the app boundary.
 extension EnvironmentValues {
     @Entry var plantCatalog: PlantCatalogRepository = LocalPlantCatalog()
 

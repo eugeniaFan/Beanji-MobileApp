@@ -14,7 +14,6 @@ struct CareTasksView: View {
     @State private var viewModel: CareTasksViewModel
 
     init(viewModel: CareTasksViewModel) {
-        // Initializes the @State storage with the injected ViewModel
         _viewModel = State(initialValue: viewModel)
     }
 
@@ -149,7 +148,7 @@ struct CareTasksView: View {
     let calendar = Calendar.current
 
     repository.mockPlants = [
-        // Überfällig
+        // Overdue
         Plant(
             name: "Calathea",
             speciesName: "Calathea orbifolia",
@@ -167,7 +166,7 @@ struct CareTasksView: View {
             photoData: nil
         ),
 
-        // Heute fällig
+        // Due today
         Plant(
             name: "Monstera",
             speciesName: "Monstera deliciosa",
@@ -185,7 +184,7 @@ struct CareTasksView: View {
             photoData: nil
         ),
 
-        // Morgen fällig
+        // Due tomorrow
         Plant(
             name: "Pilea",
             speciesName: "Pilea peperomioides",

@@ -1,5 +1,5 @@
 //
-//  PlantImage.swift
+//  PlantImageView.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 23.06.26.
@@ -19,7 +19,7 @@ struct PlantImageView: View {
         ZStack {
             if let photoData = plant.photoData,
                 let uiImage = UIImage(data: photoData)
-            {  // Success state
+            {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -27,7 +27,6 @@ struct PlantImageView: View {
                     .clipped()
 
             } else if plant.photoData != nil {
-                // Error State
                 Color.red.opacity(0.2)
                     .overlay {
                         Image(systemName: errorIcon)
@@ -35,7 +34,6 @@ struct PlantImageView: View {
                             .foregroundStyle(.red.opacity(0.6))
                     }
             } else {
-                // Placeholer
                 Color.green.opacity(0.1)
                     .overlay{
                         Image(systemName: placeholderIcon)

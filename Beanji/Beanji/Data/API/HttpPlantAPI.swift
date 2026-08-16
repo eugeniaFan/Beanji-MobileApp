@@ -4,7 +4,7 @@
 //
 //  Created by Eugenia Fanenstiel on 16.06.26.
 //
-//  MARK: Calls Perenual API to fetch plant data and details
+//  Provides optional species search and details from Perenual.
 
 import Foundation
 
@@ -26,7 +26,7 @@ struct HttpPlantAPI: PlantSpeciesProvider {
         self.apiKey = apiKey
     }
     
-    // DTOs mirror the JSON format of the Perenual API
+    // DTOs mirror the Perenual response without leaking it into app models.
     private struct SpeciesListResponse: Codable {
         let data: [SpeciesListItem]
     }
@@ -69,7 +69,6 @@ struct HttpPlantAPI: PlantSpeciesProvider {
         }
     }
     
-    // DTO for the nested image object returned by the API.
     private struct PlantImageDTO: Codable {
         let regularUrl: String?
         let originalUrl: String?
@@ -92,12 +91,11 @@ struct HttpPlantAPI: PlantSpeciesProvider {
         }
     }
     
-    // Legacy search entry point keeps compatibility with existing call sites.
+    // Callers without pagination receive the first page.
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
         try await searchPlants(matching: query, page: 1, perPage: 30)
     }
     
-    // Search for matching plant species.
     func searchPlants(matching query: String, page: Int, perPage: Int) async throws -> [PlantSpecies]
     {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -165,7 +163,6 @@ struct HttpPlantAPI: PlantSpeciesProvider {
         throw lastApiError
     }
     
-    // Fetch detailed information for a specific plant by its ID.
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
         let endpointCandidates = [Self.baseUrl, Self.fallbackBaseUrl].map {
             "\($0)/species/detail/\(id)?key=\(apiKey)"
