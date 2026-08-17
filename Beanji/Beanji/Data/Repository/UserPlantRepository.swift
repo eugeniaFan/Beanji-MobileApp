@@ -30,8 +30,8 @@ enum UserPlantRepositoryError: LocalizedError {
 
 @MainActor
 protocol UserPlantRepository {
-    func fetchAllPlants() async throws -> [Plant]
-    func fetchPlants(searchText: String?, filter: String?) async throws -> [Plant]
+    func fetchAllPlants() throws -> [Plant]
+    func fetchPlants(searchText: String?, filter: String?) throws -> [Plant]
     
     func savePlant(_ plant: Plant) async throws
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws -> Plant

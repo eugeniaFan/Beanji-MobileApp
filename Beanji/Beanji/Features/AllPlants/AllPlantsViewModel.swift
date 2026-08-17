@@ -93,12 +93,13 @@ final class AllPlantsViewModel {
     func loadMyPlants() async {
         isLoading = true
         do {
-            myPlants = try await repository.fetchAllPlants()
+            myPlants = try repository.fetchAllPlants()
             errorMessage = nil
         } catch {
             errorMessage =
             "Fehler beim Laden aller Pflanzen: \(error.localizedDescription)"
         }
+        
         isLoading = false
     }
 
@@ -126,7 +127,7 @@ final class AllPlantsViewModel {
                 in: .whitespacesAndNewlines
             )
             
-            myPlants = try await repository.fetchPlants(
+            myPlants = try repository.fetchPlants(
                 searchText: query.isEmpty ? nil : query,
                 filter: selectedFilter == "Alle" ? nil : selectedFilter
             )

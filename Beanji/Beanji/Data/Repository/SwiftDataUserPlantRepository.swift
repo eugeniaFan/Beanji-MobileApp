@@ -19,10 +19,11 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
 
     // MARK: - Public Fetch Methods
 
-    func fetchAllPlants() async throws -> [Plant] {
+    func fetchAllPlants() throws -> [Plant] {
         let descriptor = FetchDescriptor<Plant>(sortBy: [
             SortDescriptor(\.createdAt, order: .reverse)
         ])
+        
         do {
             return try modelContext.fetch(descriptor)
         } catch {
@@ -30,9 +31,7 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
         }
     }
 
-    func fetchPlants(searchText: String?, filter: String?) async throws
-        -> [Plant]
-    {
+    func fetchPlants(searchText: String?, filter: String?) throws -> [Plant] {
         var descriptor = FetchDescriptor<Plant>(sortBy: [
             SortDescriptor(\.createdAt, order: .reverse)
         ])

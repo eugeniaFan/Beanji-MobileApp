@@ -116,7 +116,7 @@ final class CareTasksViewModel {
         defer { isLoading = false }
 
         do {
-            plants = try await repository.fetchAllPlants()
+            plants = try repository.fetchAllPlants()
             errorMessage = nil
         } catch {
             errorMessage = "Pflanzen konnten nicht geladen werden."
