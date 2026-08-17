@@ -8,6 +8,26 @@
 
 import Foundation
 
+enum UserPlantRepositoryError: LocalizedError {
+    case fetchFailed(underlying: Error)
+    case saveFailed(underlying: Error)
+    case deleteFailed(underlying: Error)
+    case updateFailed(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .fetchFailed:
+            return "Could not load saved plants."
+        case .saveFailed:
+            return "Could not save the plant."
+        case .deleteFailed:
+            return "Could not delete the plant."
+        case .updateFailed:
+            return "Could not update the plant."
+        }
+    }
+}
+
 @MainActor
 protocol UserPlantRepository {
     func fetchAllPlants() async throws -> [Plant]
