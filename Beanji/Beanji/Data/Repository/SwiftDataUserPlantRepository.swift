@@ -53,7 +53,7 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
 
     // MARK: - CRUD Operations
 
-    func savePlant(_ plant: Plant) async throws {
+    func savePlant(_ plant: Plant) throws {
         modelContext.insert(plant)
 
         do {
@@ -65,7 +65,7 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
         }
     }
 
-    func deletePlant(_ plant: Plant) async throws {
+    func deletePlant(_ plant: Plant) throws {
         modelContext.delete(plant)
 
         do {
@@ -77,7 +77,7 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
         }
     }
 
-    func updatePlant(_ plant: Plant) async throws {
+    func updatePlant(_ plant: Plant) throws {
         do {
             try modelContext.save()
         } catch {

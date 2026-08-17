@@ -31,13 +31,24 @@ enum UserPlantRepositoryError: LocalizedError {
 @MainActor
 protocol UserPlantRepository {
     func fetchAllPlants() throws -> [Plant]
-    func fetchPlants(searchText: String?, filter: String?) throws -> [Plant]
     
-    func savePlant(_ plant: Plant) async throws
-    func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws -> Plant
+    func fetchPlants(
+        searchText: String?,
+        filter: String?
+    ) throws -> [Plant]
+
+    func savePlant(_ plant: Plant) throws
     
-    func deletePlant(_ plant: Plant) async throws
-    func updatePlant(_ plant: Plant) async throws
-    
-    func refreshPlantSpeciesInfo(for plant: Plant, using provider: PlantSpeciesProvider) async throws
+    func addSpeciesToMyPlants(
+        from species: PlantSpecies,
+        userPlantName: String?
+    ) async throws -> Plant
+
+    func deletePlant(_ plant: Plant) throws
+    func updatePlant(_ plant: Plant) throws
+
+    func refreshPlantSpeciesInfo(
+        for plant: Plant,
+        using provider: PlantSpeciesProvider
+    ) async throws
 }

@@ -152,7 +152,7 @@ final class CareTasksViewModel {
         plant.lastWatered = completionDate
 
         do {
-            try await repository.updatePlant(plant)
+            try repository.updatePlant(plant)
 
             completedTasks.removeAll {
                 $0.plant.id == plant.id

@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.plantCatalog) private var plantCatalog
     @Environment(\.makeUserPlantRepository) private var makeUserPlantRepository
+    
     @State private var allplantsViewModel: AllPlantsViewModel?
 
     var body: some View {

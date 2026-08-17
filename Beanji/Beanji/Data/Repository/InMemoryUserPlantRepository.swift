@@ -95,10 +95,25 @@ final class InMemoryUserPlantRepository: UserPlantRepository {
         return result
     }
 
-    func savePlant(_ plant: Plant) async throws {
+    func savePlant(_ plant: Plant) throws {
         mockPlants.append(plant)
     }
+    
+    func deletePlant(_ plant: Plant) throws {
+        mockPlants.removeAll { $0.id == plant.id }
+    }
 
+    func updatePlant(_ plant: Plant) throws {
+        guard let index = mockPlants.firstIndex(
+            where: { $0.id == plant.id }
+        ) else {
+            return
+        }
+        
+        mockPlants[index] = plant
+    }
+    
+    
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws
         -> Plant
     {
@@ -118,17 +133,8 @@ final class InMemoryUserPlantRepository: UserPlantRepository {
             speciesInfo: speciesInfo
         )
         mockPlants.append(plant)
+        
         return plant
-    }
-
-    func deletePlant(_ plant: Plant) async throws {
-        mockPlants.removeAll { $0.id == plant.id }
-    }
-
-    func updatePlant(_ plant: Plant) async throws {
-        guard let index = mockPlants.firstIndex(where: { $0.id == plant.id })
-        else { return }
-        mockPlants[index] = plant
     }
 
     

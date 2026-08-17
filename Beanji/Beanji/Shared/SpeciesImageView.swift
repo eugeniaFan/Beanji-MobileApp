@@ -59,6 +59,7 @@ struct SpeciesImageView: View {
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
+    
     private func placeholderView(color: Color, icon: String) -> some View {
         color.opacity(0.1)
             .overlay {
@@ -83,6 +84,7 @@ struct SpeciesImageView: View {
         careLevel: nil,
         description: nil,
     )
+    
     SpeciesImageView(species: species)
         .padding()
 }

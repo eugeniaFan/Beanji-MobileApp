@@ -231,7 +231,7 @@ final class PlantDetailViewModel {
     func deletePlant() async -> Bool {
         guard case .editablePlant(let plant) = mode else { return false }
         do {
-            try await repository.deletePlant(plant)
+            try repository.deletePlant(plant)
             onPlantDeleted?()
             return true
         }
@@ -239,6 +239,37 @@ final class PlantDetailViewModel {
             errorMessage = "Pflanze konnte nicht gelöscht werden."
             return false
         }
+    }
+    
+    func updatePlant(
+        name: String,
+        location: String,
+        notes: String,
+        wateringIntervalDays: Int,
+        fertilizingIntervalDays: Int
+    ) async {
+        guard case .editablePlant(let plant) = mode else { return }
+        plant.name = name
+        plant.location =
+            location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? nil : location
+        plant.notes =
+            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? nil : notes
+        plant.wateringIntervalDays = wateringIntervalDays
+        plant.fertilizingIntervalDays = fertilizingIntervalDays
+
+        do {
+            try repository.updatePlant(plant)
+        }
+        catch {
+            errorMessage = "Pflanze konnte nicht aktualisiert werden."
+        }
+    }
+    
+    var canRefreshSpeciesInfo: Bool {
+        guard case .editablePlant(let plant) = mode else { return false }
+        return plant.speciesInfo != nil
     }
 
     func addCurrentSpeciesToMyPlants(userPlantName: String?) async {
@@ -309,36 +340,4 @@ final class PlantDetailViewModel {
 
         return nil
     }
-
-    var canRefreshSpeciesInfo: Bool {
-        guard case .editablePlant(let plant) = mode else { return false }
-        return plant.speciesInfo != nil
-    }
-
-    func updatePlant(
-        name: String,
-        location: String,
-        notes: String,
-        wateringIntervalDays: Int,
-        fertilizingIntervalDays: Int
-    ) async {
-        guard case .editablePlant(let plant) = mode else { return }
-        plant.name = name
-        plant.location =
-            location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? nil : location
-        plant.notes =
-            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? nil : notes
-        plant.wateringIntervalDays = wateringIntervalDays
-        plant.fertilizingIntervalDays = fertilizingIntervalDays
-
-        do {
-            try await repository.updatePlant(plant)
-        }
-        catch {
-            errorMessage = "Pflanze konnte nicht aktualisiert werden."
-        }
-    }
-
 }

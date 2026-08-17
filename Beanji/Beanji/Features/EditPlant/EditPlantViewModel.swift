@@ -34,7 +34,7 @@ final class EditPlantViewModel {
         self.wateringIntervalDays = plant.wateringIntervalDays
         self.fertilizingIntervalDays = plant.fertilizingIntervalDays
     }
-    
+
     var canSave: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -45,19 +45,22 @@ final class EditPlantViewModel {
         defer { isSaving = false }
 
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLocation = location.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
         plant.name = trimmedName
         plant.location = trimmedLocation.isEmpty ? nil : trimmedLocation
-        plant.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        plant.notes =
+            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes
         plant.wateringIntervalDays = wateringIntervalDays
         plant.fertilizingIntervalDays = fertilizingIntervalDays
 
         do {
-            try await repository.updatePlant(plant)
+            try repository.updatePlant(plant)
             errorMessage = nil
-           onPlantUpdated?()
+            onPlantUpdated?()
             return true
         } catch {
             errorMessage = "Pflanze konnte nicht gespeichert werden."
