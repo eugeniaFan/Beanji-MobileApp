@@ -115,7 +115,8 @@ struct CareTasksView: View {
                     CareTasksRow(
                         task: task,
                         dueText: viewModel.dueText(for: task),
-                        isOverdue: viewModel.isOverdue(task)
+                        isOverdue: viewModel.isOverdue(task),
+                        wasWateredToday: viewModel.wasWateredToday(task)
                     ) {
                         Task {
                             await viewModel.complete(task)

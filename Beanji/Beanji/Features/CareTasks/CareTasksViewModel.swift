@@ -122,14 +122,32 @@ final class CareTasksViewModel {
             errorMessage = "Pflanzen konnten nicht geladen werden."
         }
     }
-
+    
+    func wasWateredToday(_ task: CareTask) -> Bool {
+        completedTasks.contains { completedTask in
+            guard
+                completedTask.plant.id == task.plant.id,
+                completedTask.kind == .watering,
+                let completedAt = completedTask.completedAt
+            else {
+                return false
+            }
+            
+            return calendar.isDateInToday(completedAt)
+        }
+    }
+    
     func complete(_ task: CareTask) async {
+        guard !wasWateredToday(task) else {
+            return
+        }
+        
         switch task.kind {
         case .watering:
             await completeWatering(task)
         }
     }
-
+    
     func dueText(for task: CareTask) -> String {
         let dueDay = calendar.dateComponents(
             [.day],

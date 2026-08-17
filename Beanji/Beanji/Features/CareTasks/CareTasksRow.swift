@@ -11,16 +11,19 @@ struct CareTasksRow: View {
     let task: CareTask
     let dueText: String
     let isOverdue: Bool
+    let wasWateredToday: Bool
+    
     let onComplete: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             PlantImageView(
                 plant: task.plant,
                 height: 64,
                 width: 64,
                 cornerRadius: 12
             )
+            
             VStack(alignment: .leading, spacing: 5) {
                 Text(task.plant.name)
                     .font(.headline)
@@ -44,8 +47,9 @@ struct CareTasksRow: View {
 
             if task.isCompleted {
                 completedIndicator
-            }
-            else {
+            } else if wasWateredToday {
+                wateredTodayIndicator
+            } else {
                 completeButton
             }
         }
@@ -57,15 +61,15 @@ struct CareTasksRow: View {
     private var completeButton: some View {
         Button(action: onComplete) {
             VStack(spacing: 4) {
-                Image(systemName: "checkmark.circle")
+                Image(systemName: "circle")
                     .font(.title2)
 
-                Text("Erledigt")
+                Text("Done")
                     .font(.caption2)
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(task.plant.name) als gegossen markieren")
+        .accessibilityLabel("Mark \(task.plant.name) as watered")
     }
 
     private var completedIndicator: some View {
@@ -73,15 +77,37 @@ struct CareTasksRow: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title2)
 
-            Text("Erledigt")
+            Text("Done")
                 .font(.caption2)
+                .multilineTextAlignment(.center)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.green.opacity(0.9))
+        .accessibilityElement(children: .combine)
     }
-
+    
+    private var wateredTodayIndicator: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title2)
+            
+            Text("Watered\ntoday")
+                .font(.caption2)
+                .multilineTextAlignment(.center)
+        }
+        .foregroundStyle(.green.opacity(0.9))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(task.plant.name) was watered today"
+        )
+    }
+    
     private var statusText: String {
         if let completedAt = task.completedAt {
-            return "Erledigt um \(completedAt.formatted(date: .omitted, time: .shortened))"
+            let formattedTime = completedAt.formatted(
+                date: .omitted,
+                time: .shortened
+            )
+            return "Done at \(formattedTime)"
         }
 
         return dueText
@@ -102,4 +128,69 @@ struct CareTasksRow: View {
 
         return AnyShapeStyle(.secondary)
     }
+}
+
+#Preview("Due Today") {
+    let calendar = Calendar.current
+    let today = Date()
+    let lastWatered = calendar.date(
+        byAdding: .day,
+        value: -20,
+        to: today
+    )!
+    
+    let plantOne = Plant(
+        name: "Monstera",
+        speciesName: "Monstera deliciosa",
+        lastWatered: lastWatered,
+        lastFertilized: today,
+        wateringIntervalDays: 20,
+        fertilizingIntervalDays: 30,
+        createdAt: today
+    )
+
+    let taskOne = CareTask(
+        plant: plantOne,
+        kind: .watering,
+        dueDate: plantOne.nextWateringDate(using: calendar),
+        completedAt: nil
+    )
+    
+    CareTasksRow(
+        task: taskOne,
+        dueText: "Due today",
+        isOverdue: false,
+        wasWateredToday: false,
+        onComplete: { }
+    )
+}
+
+#Preview("Watered Today, Due Tomorrow") {
+    let calendar = Calendar.current
+    let today = Date()
+
+    let plant = Plant(
+        name: "Monstera",
+        speciesName: "Monstera deliciosa",
+        lastWatered: today,
+        lastFertilized: today,
+        wateringIntervalDays: 1,
+        fertilizingIntervalDays: 30,
+        createdAt: today
+    )
+
+    let task = CareTask(
+        plant: plant,
+        kind: .watering,
+        dueDate: plant.nextWateringDate(using: calendar),
+        completedAt: nil
+    )
+
+    CareTasksRow(
+        task: task,
+        dueText: "Due tomorrow",
+        isOverdue: false,
+        wasWateredToday: true,
+        onComplete: {}
+    )
 }
