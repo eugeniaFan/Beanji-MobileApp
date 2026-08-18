@@ -17,7 +17,7 @@ struct PlantCardView: View {
     var errorSystemImage: String = "exclamationmark.triangle"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 16) {
             ZStack(alignment: .top) {
                 PlantImageView(plant: plant)
                 HStack(alignment: .top) {

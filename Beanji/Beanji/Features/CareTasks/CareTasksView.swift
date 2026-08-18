@@ -35,11 +35,18 @@ struct CareTasksView: View {
                     taskList
                 }
             }
-            .padding(.horizontal)
-            
-            .background(Color(.pink .opacity(0.09)))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .navigationTitle("Beanji")
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topLeading
+            )
+            .background(
+                Color.pink
+                    .opacity(0.09)
+                    .ignoresSafeArea()
+            )
             .task {
                 await viewModel.loadTasks()
             }
@@ -63,15 +70,17 @@ struct CareTasksView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
-        }.ignoresSafeArea(edges: .top)
+        }
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Pflege")
+            Text("Care")
                 .font(.largeTitle.bold())
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 4)
 
-            Text("Was deine Pflanzen als Nächstes brauchen.")
+            Text("What your plants need next.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

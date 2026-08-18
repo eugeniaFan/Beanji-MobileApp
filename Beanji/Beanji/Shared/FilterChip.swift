@@ -19,10 +19,11 @@ struct FilterChip: View {
                 .fontWeight(isSelected ? .semibold : .regular)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(isSelected ? Color.green : Color(.systemGray5))
-                .foregroundStyle(isSelected ? .white : .primary)
+                .background(isSelected ? Color.brown : Color(.systemBackground))
+                .foregroundStyle(isSelected ? .white : .primary.opacity(0.6))
                 .clipShape(Capsule())
         }
+        .buttonStyle(.plain)
     }
 }
 

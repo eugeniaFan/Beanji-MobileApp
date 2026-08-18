@@ -34,6 +34,8 @@ struct PlantDetailView: View {
                 .padding(.bottom, 32)
             }
         }
+        .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize)
         .ignoresSafeArea(edges: .top)
         .background(Color(.systemGroupedBackground))
         .navigationBarBackButtonHidden(true)
@@ -46,7 +48,6 @@ struct PlantDetailView: View {
             }
             .padding(.horizontal, 20)
         }
-
         .sheet(isPresented: $bindableViewModel.showingEditSheet, onDismiss: {
             self.viewModel.editViewModel = nil
         }) {
