@@ -17,7 +17,7 @@ struct PlantCardView: View {
     var errorSystemImage: String = "exclamationmark.triangle"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 16) {
             ZStack(alignment: .top) {
                 PlantImageView(plant: plant)
                 HStack(alignment: .top) {
@@ -50,7 +50,6 @@ struct PlantCardView: View {
                         }
                     }
                 }
-                
             }.frame(width: 160, height: 140)
               
             VStack(alignment: .leading) {
@@ -67,7 +66,8 @@ struct PlantCardView: View {
             }
             .padding(.horizontal, 4)
         }
-        .padding(8)  .clipped()
+        .padding(8)
+        .clipped()
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .contextMenu {

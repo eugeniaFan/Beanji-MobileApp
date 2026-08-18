@@ -11,7 +11,7 @@ import Observation
 @Observable
 @MainActor
 final class CareTasksViewModel {
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
     private let calendar: Calendar
 
     var plants: [Plant] = []
@@ -21,7 +21,7 @@ final class CareTasksViewModel {
     var errorMessage: String?
 
     init(
-        repository: PlantRepository,
+        repository: UserPlantRepository,
         calendar: Calendar = .current
     ) {
         self.repository = repository
@@ -116,20 +116,38 @@ final class CareTasksViewModel {
         defer { isLoading = false }
 
         do {
-            plants = try await repository.fetchAllPlants()
+            plants = try repository.fetchAllPlants()
             errorMessage = nil
         } catch {
             errorMessage = "Pflanzen konnten nicht geladen werden."
         }
     }
-
+    
+    func wasWateredToday(_ task: CareTask) -> Bool {
+        completedTasks.contains { completedTask in
+            guard
+                completedTask.plant.id == task.plant.id,
+                completedTask.kind == .watering,
+                let completedAt = completedTask.completedAt
+            else {
+                return false
+            }
+            
+            return calendar.isDateInToday(completedAt)
+        }
+    }
+    
     func complete(_ task: CareTask) async {
+        guard !wasWateredToday(task) else {
+            return
+        }
+        
         switch task.kind {
         case .watering:
             await completeWatering(task)
         }
     }
-
+    
     func dueText(for task: CareTask) -> String {
         let dueDay = calendar.dateComponents(
             [.day],
@@ -152,7 +170,7 @@ final class CareTasksViewModel {
         plant.lastWatered = completionDate
 
         do {
-            try await repository.updatePlant(plant)
+            try repository.updatePlant(plant)
 
             completedTasks.removeAll {
                 $0.plant.id == plant.id

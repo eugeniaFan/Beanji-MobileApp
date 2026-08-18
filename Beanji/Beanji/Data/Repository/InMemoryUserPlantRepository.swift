@@ -1,5 +1,5 @@
 //
-//  MockPlantRepository.swift
+//  InMemoryUserPlantRepository.swift
 //  Beanji
 //
 //  Created by Eugenia Fanenstiel on 24.06.26.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-final class MockPlantRepository: PlantRepository {
+final class InMemoryUserPlantRepository: UserPlantRepository {
 
     var mockPlants: [Plant] = [
         Plant(
@@ -76,29 +76,29 @@ final class MockPlantRepository: PlantRepository {
     ]
 
     
-    func fetchAllPlants() async throws -> [Plant] {
+    func fetchAllPlants() throws -> [Plant] {
         return mockPlants.sorted { $0.createdAt > $1.createdAt }
     }
 
-    func fetchPlants(searchText: String?, filter: String?) async throws
-        -> [Plant]
-    {
-        var result = mockPlants
-        if let searchText = searchText, !searchText.isEmpty {
-            result = result.filter { plant in
-                plant.name.localizedCaseInsensitiveContains(searchText)
-                    || plant.speciesName.localizedCaseInsensitiveContains(
-                        searchText
-                    )
-            }
-        }
-        return result
-    }
-
-    func savePlant(_ plant: Plant) async throws {
+    func savePlant(_ plant: Plant) throws {
         mockPlants.append(plant)
     }
+    
+    func deletePlant(_ plant: Plant) throws {
+        mockPlants.removeAll { $0.id == plant.id }
+    }
 
+    func updatePlant(_ plant: Plant) throws {
+        guard let index = mockPlants.firstIndex(
+            where: { $0.id == plant.id }
+        ) else {
+            return
+        }
+        
+        mockPlants[index] = plant
+    }
+    
+    
     func addSpeciesToMyPlants(from species: PlantSpecies, userPlantName: String?) async throws
         -> Plant
     {
@@ -118,17 +118,8 @@ final class MockPlantRepository: PlantRepository {
             speciesInfo: speciesInfo
         )
         mockPlants.append(plant)
+        
         return plant
-    }
-
-    func deletePlant(_ plant: Plant) async throws {
-        mockPlants.removeAll { $0.id == plant.id }
-    }
-
-    func updatePlant(_ plant: Plant) async throws {
-        guard let index = mockPlants.firstIndex(where: { $0.id == plant.id })
-        else { return }
-        mockPlants[index] = plant
     }
 
     

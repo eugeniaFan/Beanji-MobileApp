@@ -57,6 +57,7 @@ struct PlantImageView: View {
         fertilizingIntervalDays: 30,
         createdAt: Date()
     )
+    
     PlantImageView(plant: plant)
         .frame(width: 180)
         .padding()

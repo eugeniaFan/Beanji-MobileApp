@@ -12,7 +12,7 @@ import Observation
 @MainActor
 final class EditPlantViewModel {
     var plant: Plant
-    private let repository: PlantRepository
+    private let repository: UserPlantRepository
 
     var name: String
     var location: String
@@ -24,7 +24,7 @@ final class EditPlantViewModel {
 
     var onPlantUpdated: (() -> Void)?
 
-    init(plant: Plant, repository: PlantRepository) {
+    init(plant: Plant, repository: UserPlantRepository) {
         self.plant = plant
         self.repository = repository
 
@@ -34,7 +34,7 @@ final class EditPlantViewModel {
         self.wateringIntervalDays = plant.wateringIntervalDays
         self.fertilizingIntervalDays = plant.fertilizingIntervalDays
     }
-    
+
     var canSave: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -45,19 +45,22 @@ final class EditPlantViewModel {
         defer { isSaving = false }
 
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLocation = location.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
         plant.name = trimmedName
         plant.location = trimmedLocation.isEmpty ? nil : trimmedLocation
-        plant.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        plant.notes =
+            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes
         plant.wateringIntervalDays = wateringIntervalDays
         plant.fertilizingIntervalDays = fertilizingIntervalDays
 
         do {
-            try await repository.updatePlant(plant)
+            try repository.updatePlant(plant)
             errorMessage = nil
-           onPlantUpdated?()
+            onPlantUpdated?()
             return true
         } catch {
             errorMessage = "Pflanze konnte nicht gespeichert werden."

@@ -35,9 +35,9 @@ enum CareDueTextFormatter {
         default:
             return dueDate.formatted(
                 .dateTime
-                    .weekday(.abbreviated)
-                    .day()
-                    .month(.abbreviated)
+                .weekday(.abbreviated)
+                .day()
+                .month(.abbreviated)
             )
         }
     }

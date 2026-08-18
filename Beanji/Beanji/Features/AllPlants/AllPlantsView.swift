@@ -9,13 +9,14 @@ import SwiftData
 import SwiftUI
 
 struct AllPlantsView: View {
-
+    @Namespace private var pageSelectorAnimation
     @State private var viewModel: AllPlantsViewModel
 
     init(viewModel: AllPlantsViewModel) {
         _viewModel = State(initialValue: viewModel)
     }
-
+    private let floatingTabBarClearance: CGFloat = 24
+    
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12),
@@ -23,53 +24,51 @@ struct AllPlantsView: View {
 
     var body: some View {
         @Bindable var viewModel = viewModel
-
+        
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 headerTitle
                 pageSelector
                 searchField
-                searchFeedback
                 filterChips
-                Divider()
-
+                
                 // MARK: - Plant Pages
 
                 TabView(selection: $viewModel.selectedPage) {
                     myPlantsGrid
                         .tag(PlantListPage.myPlants)
-
+                    
                     allPlantsGrid
                         .tag(PlantListPage.allPlants)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                )
+                .ignoresSafeArea(.container, edges: .bottom)
+                
             }
-            .padding([.leading, .trailing], 20)
-            .background(Color(.systemGray6))
-            .sheet(
-                isPresented: $viewModel.showingAddPlant,
-                onDismiss: {
-                    Task {
-                        await viewModel.loadMyPlants()
-                    }
-                }
-            ) {
-
-            }
-            .overlay(alignment: .bottomTrailing) {
-                if viewModel.selectedPage == .myPlants {
-                   
-                }
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topLeading
+            )
+            .background(
+                Color.pink
+                    .opacity(0.09)
+            )
         }
         .alert(
-            "Pflanze löschen?",
+            "Delete Plant?",
             isPresented: Binding(
                 get: { viewModel.plantToDelete != nil },
                 set: { if !$0 { viewModel.plantToDelete = nil } }
             )
         ) {
-            Button("Löschen", role: .destructive) {
+            Button("Delete", role: .destructive) {
                 if let plant = viewModel.plantToDelete {
                     Task {
                         await viewModel.deletePlant(plant)
@@ -77,18 +76,16 @@ struct AllPlantsView: View {
                     }
                 }
             }
-
-            Button("Abbrechen", role: .cancel) {
+            Button("Cancel", role: .cancel) {
                 viewModel.plantToDelete = nil
             }
-
         } message: {
             if let plant = viewModel.plantToDelete {
-                Text("\"\(plant.name)\" wird dauerhaft gelöscht.")
+                Text("\"\(plant.name)\" can not be restored.")
             }
         }
         .alert(
-            "Fehler",
+            "Error",
             isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
@@ -104,49 +101,40 @@ struct AllPlantsView: View {
     }
 
     private var headerTitle: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(LocalizedStringKey(viewModel.selectedPage.title))
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Plants")
+                .font(.largeTitle.bold())
+                .accessibilityAddTraits(.isHeader)
             }
-        }
     }
 
     private var searchField: some View {
-
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
-            TextField("Pflanzen suchen...", text: $viewModel.searchText)
-                .textFieldStyle(.plain)
-                .onSubmit {
-                    if viewModel.selectedPage == .allPlants {
-                        Task { await viewModel.performApiSearch() }
-                    }
-                }
-            if viewModel.selectedPage == .allPlants
-                && !viewModel.searchText.isEmpty
-            {
-                Button {
-                    Task { await viewModel.performApiSearch() }
-                } label: {
-                    Image(systemName: "arrow.right.circle.fill")
-                        .foregroundStyle(.green)
-                        .font(.title3)
-                }
-                .buttonStyle(.plain)
-            }
+            TextField(
+                "Search plants...",
+                text: $viewModel.searchText
+            )
+            .textFieldStyle(.plain)
         }
-        .padding(12)
+        .padding(.horizontal, 16)
+        .frame(minHeight: 48)
         .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    Color.primary.opacity(0.05),
+                    lineWidth: 1
+                )
+        }
     }
 
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 14) {
+            HStack(spacing: 8) {
                 ForEach(viewModel.filters, id: \.self) { filter in
                     FilterChip(
                         title: String(
@@ -164,46 +152,80 @@ struct AllPlantsView: View {
     }
 
     private var pageSelector: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4){
             ForEach(PlantListPage.allCases) { page in
+                let isSelected = viewModel.selectedPage == page
+                
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.snappy(duration: 0.25)) {
                         viewModel.selectedPage = page
                     }
                 } label: {
                     Text(LocalizedStringKey(page.title))
-                        .font(
-                            .subheadline.weight(
-                                viewModel.selectedPage == page
-                                    ? .semibold : .regular
-                            )
-                        )
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(
-                            viewModel.selectedPage == page
-                                ? .primary : .secondary
+                            isSelected ? Color.white : Color.primary.opacity(0.6)
                         )
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            viewModel.selectedPage == page
-                                ? Color(.systemBackground)
-                                : Color.clear
+                        .frame(
+                            maxWidth: .infinity,
+                            minHeight: 44
                         )
-                        .clipShape(Capsule())
+                        .background {
+                            if (isSelected) {
+                                Capsule()
+                                    .fill(Color.brown)
+                                    .matchedGeometryEffect(
+                                        id: "selectedPage",
+                                        in: pageSelectorAnimation
+                                    )
+                                    .shadow(
+                                        color: .black.opacity(0.12),
+                                        radius: 2,
+                                        y: 2
+                                    )
+                            }
+                        }
+                        .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityValue(
+                    isSelected ? "Selected" : "Not selected"
+                )
             }
         }
-        .padding(4)
-        .background(Color(.systemGray5))
-        .clipShape(Capsule())
+        .frame(
+            maxWidth: .infinity
+        )
+        .background(
+            Color(.systemBackground).opacity(0.9)
+        )
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: 22,
+                style: .continuous
+            )
+        )
+        .overlay {
+            RoundedRectangle(
+                cornerRadius: 22,
+                style: .continuous
+            )
+            .stroke(
+                Color.primary.opacity(0.05),
+                lineWidth: 1
+            )
+        }
+        .animation(
+            .snappy(duration: 0.2),
+            value: viewModel.selectedPage
+        )
     }
 
     private var myPlantsGrid: some View {
         plantGrid(
             isLoading: viewModel.isLoading,
             isEmpty: viewModel.filteredMyPlants.isEmpty,
-            emptyMessage: "Noch keine eigenen Pflanzen."
+            emptyMessage: "No plants here."
         ) {
             ForEach(viewModel.filteredMyPlants) { plant in
                 NavigationLink {
@@ -229,7 +251,7 @@ struct AllPlantsView: View {
         plantGrid(
             isLoading: viewModel.isCatalogLoading,
             isEmpty: viewModel.filteredCatalogPlants.isEmpty,
-            emptyMessage: "Keine Pflanzen im Katalog gefunden."
+            emptyMessage: "No Plants can be found in the local catalog."
         ) {
             ForEach(viewModel.filteredCatalogPlants) { species in
                 NavigationLink {
@@ -252,20 +274,7 @@ struct AllPlantsView: View {
                     SpeciesCardView(species: species)
                 }
                 .buttonStyle(.plain)
-                .task {
-                    await viewModel.loadNextCatalogPageIfNeeded(
-                        current: species
-                    )
-                }
             }
-        }
-    }
-    @ViewBuilder
-    private var searchFeedback: some View {
-        if let count = viewModel.searchResultCount {
-            Text("Treffer: \(count)")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -276,28 +285,50 @@ struct AllPlantsView: View {
         emptyMessage: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        ScrollView {
+        Group {
             if isLoading && isEmpty {
                 ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 200)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity
+                    )
             } else if isEmpty {
-                Text(emptyMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 200)
+                VStack(spacing: 12) {
+                    Text(emptyMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             } else {
-                LazyVGrid(columns: columns, spacing: 10) {
-                    content()
-                }
-
-                if isLoading {
-                    ProgressView()
-                        .padding(.top, 12)
-                        .frame(maxWidth: .infinity)
-                }
+                ScrollView {
+                    VStack(spacing: 16) {
+                        LazyVGrid(
+                            columns: columns,
+                            spacing: 16
+                        ) {
+                            content()
+                        }
+                        
+                        if isLoading {
+                            ProgressView()
+                                .padding(.top, 16)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .padding(.top, 16)
+                }.contentMargins(
+                    .bottom,
+                    floatingTabBarClearance,
+                    for: .scrollContent
+                )
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
-        .scrollIndicators(.hidden)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: .top
+        )
     }
 }
 
@@ -305,7 +336,7 @@ struct AllPlantsView: View {
     AllPlantsView(
         viewModel: AllPlantsViewModel(
             catalogService: PreviewPlantProvider(),
-            repository: MockPlantRepository()
+            repository: InMemoryUserPlantRepository()
         )
     )
     .modelContainer(for: [Plant.self, PlantSpeciesInfo.self], inMemory: true)

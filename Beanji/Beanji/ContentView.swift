@@ -11,14 +11,15 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.plantCatalog) private var plantCatalog
-    @Environment(\.makePlantRepository) private var makePlantRepository
+    @Environment(\.makeUserPlantRepository) private var makeUserPlantRepository
+    
     @State private var allplantsViewModel: AllPlantsViewModel?
 
     var body: some View {
         TabView {
             CareTasksView(
                 viewModel: CareTasksViewModel(
-                    repository: makePlantRepository(modelContext)
+                    repository: makeUserPlantRepository(modelContext)
                 )
             )
             .tabItem {
@@ -39,7 +40,7 @@ struct ContentView: View {
             guard allplantsViewModel == nil else { return }
             allplantsViewModel = AllPlantsViewModel(
                 catalogService: plantCatalog,
-                repository: makePlantRepository(modelContext)
+                repository: makeUserPlantRepository(modelContext)
             )
         }
     }
@@ -48,8 +49,8 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environment(\.plantCatalog, PreviewPlantProvider())
-        .environment(\.makePlantRepository) { _ in
-            MockPlantRepository()
+        .environment(\.makeUserPlantRepository) { _ in
+            InMemoryUserPlantRepository()
         }
         .modelContainer(
             for: [Plant.self, PlantSpeciesInfo.self],

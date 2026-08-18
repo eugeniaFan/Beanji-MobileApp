@@ -62,8 +62,8 @@ struct SpeciesCardView: View {
         imageUrl: nil,
         careLevel: nil,
         description: nil,
-        
     )
+    
     SpeciesCardView(species: species)
         .frame(width: 180)
         .padding()
