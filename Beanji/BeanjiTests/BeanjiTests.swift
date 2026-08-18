@@ -26,7 +26,6 @@ struct BeanjiTests {
         
         
         viewModel.searchText = "Monstera"
-        await viewModel.performApiSearch()
 
         let searchResultCount = viewModel.filteredCatalogPlants.count
         let firstSearchResultName = viewModel.filteredCatalogPlants.first?.commonName
@@ -35,7 +34,6 @@ struct BeanjiTests {
         #expect(firstSearchResultName == "Swiss Cheese Plant")
     
         viewModel.searchText = ""
-        await viewModel.handleSearchTextChanged()
 
         let restoredPlantCount = viewModel.filteredCatalogPlants.count
         
@@ -64,6 +62,29 @@ struct BeanjiTests {
         #expect(receivedSearchQuery == "Monstera")
         #expect(remoteResultCount == 1)
         #expect(firstRemoteResultName == "Remote Monstera")
+    }
+    
+    @Test
+    @MainActor
+    func myPlantsSearchFiltersLoadedPlantsAndRestoresAll() async {
+        let viewModel = AllPlantsViewModel(
+            catalogService: TestPlantCatalog(),
+            repository: InMemoryUserPlantRepository()
+        )
+
+        viewModel.selectedPage = .myPlants
+        await viewModel.loadInitialData()
+
+        let initialPlantCount = viewModel.filteredMyPlants.count
+
+        viewModel.searchText = "Monstera"
+        let matchingPlantNames = viewModel.filteredMyPlants.map { $0.name }
+        #expect(matchingPlantNames == ["Monstera"])
+
+        viewModel.searchText = ""
+        let restoredPlantCount = viewModel.filteredMyPlants.count
+
+        #expect(restoredPlantCount == initialPlantCount)
     }
 }
 

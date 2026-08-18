@@ -31,26 +31,6 @@ final class SwiftDataUserPlantRepository: UserPlantRepository {
         }
     }
 
-    func fetchPlants(searchText: String?, filter: String?) throws -> [Plant] {
-        var descriptor = FetchDescriptor<Plant>(sortBy: [
-            SortDescriptor(\.createdAt, order: .reverse)
-        ])
-
-        if let searchText, !searchText.isEmpty {
-            descriptor.predicate = #Predicate { plant in
-                plant.name.localizedStandardContains(searchText)
-                    || plant.speciesName.localizedStandardContains(searchText)
-            }
-        }
-
-        do {
-            return try modelContext.fetch(descriptor)
-        } catch {
-            throw UserPlantRepositoryError.fetchFailed(underlying: error)
-        }
-
-    }
-
     // MARK: - CRUD Operations
 
     func savePlant(_ plant: Plant) throws {

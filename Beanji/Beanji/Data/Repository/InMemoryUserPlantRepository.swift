@@ -80,21 +80,6 @@ final class InMemoryUserPlantRepository: UserPlantRepository {
         return mockPlants.sorted { $0.createdAt > $1.createdAt }
     }
 
-    func fetchPlants(searchText: String?, filter: String?) throws -> [Plant] {
-        var result = mockPlants
-        
-        if let searchText = searchText, !searchText.isEmpty {
-            result = result.filter { plant in
-                plant.name.localizedCaseInsensitiveContains(searchText)
-                    || plant.speciesName.localizedCaseInsensitiveContains(
-                        searchText
-                    )
-            }
-        }
-        
-        return result
-    }
-
     func savePlant(_ plant: Plant) throws {
         mockPlants.append(plant)
     }

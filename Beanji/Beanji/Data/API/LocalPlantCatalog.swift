@@ -67,8 +67,7 @@ struct LocalPlantCatalog: PlantCatalogRepository {
             throw LocalPlantCatalogError.decodingError
         }
     }
-        
-
+    
     
     func getPlantDetail(id: Int) async throws -> PlantSpecies {
         let allPlants = try getAllPlants()
@@ -80,25 +79,5 @@ struct LocalPlantCatalog: PlantCatalogRepository {
         }
         
         return plant
-    }
-
-    
-    func searchPlants(
-        matching query: String,
-        page: Int,
-        perPage: Int
-    ) async throws -> [PlantSpecies] {
-        guard page > 0, perPage > 0 else { return [] }
-        
-        let filteredPlants = try await searchPlants(matching: query)
-    
-        let startIndex = (page - 1) * perPage
-        guard startIndex < filteredPlants.count else { return [] }
-
-        let endIndex = min(
-            startIndex + perPage,
-            filteredPlants.count
-        )
-        return Array(filteredPlants[startIndex..<endIndex])
     }
 }
