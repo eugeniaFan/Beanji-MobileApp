@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 struct CareTasksView: View {
-
     @State private var viewModel: CareTasksViewModel
 
     init(viewModel: CareTasksViewModel) {
@@ -155,6 +154,7 @@ struct CareTasksView: View {
 
 #Preview("Care Tasks") {
     let repository = InMemoryUserPlantRepository()
+    let careEventRepository = InMemoryCareEventRepository()
     let calendar = Calendar.current
 
     repository.mockPlants = [
@@ -215,7 +215,8 @@ struct CareTasksView: View {
 
     return CareTasksView(
         viewModel: CareTasksViewModel(
-            repository: repository
+            repository: repository,
+            careEventRepository: careEventRepository
         )
     )
 }

@@ -8,17 +8,14 @@
 import Foundation
 
 struct CareTask: Identifiable {
-    enum Kind: Equatable {
-        case watering
-    }
 
     let plant: Plant
-    let kind: Kind
+    let kind: CareKind
     let dueDate: Date
     let completedAt: Date?
 
     var id: String {
-        "\(plant.id)-watering-\(dueDate.timeIntervalSince1970)"
+        "\(plant.id)-\(kind.rawValue)-\(dueDate.timeIntervalSince1970)"
     }
 
     var isCompleted: Bool {

@@ -16,6 +16,10 @@ extension EnvironmentValues {
         @MainActor (ModelContext) -> UserPlantRepository = { modelContext in
             SwiftDataUserPlantRepository(modelContext: modelContext)
         }
+    @Entry var makeCareEventRepository:
+        @MainActor (ModelContext) -> CareEventRepository = { modelContext in
+            SwiftDataCareEventRepository(modelContext: modelContext)
+        }
 }
 
 
@@ -25,6 +29,7 @@ struct BeanjiApp: App {
         let schema = Schema([
             Plant.self,
             PlantSpeciesInfo.self,
+            CareEvent.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

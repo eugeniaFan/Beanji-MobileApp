@@ -5,6 +5,7 @@
 //  Created by Eugenia Fanenstiel on 14.08.26.
 
 import Foundation
+import SwiftData
 import Testing
 @testable import Beanji
 
@@ -32,7 +33,6 @@ struct BeanjiTests {
         
         #expect(searchResultCount == 1)
         #expect(firstSearchResultName == "Swiss Cheese Plant")
-    
         viewModel.searchText = ""
 
         let restoredPlantCount = viewModel.filteredCatalogPlants.count
@@ -184,6 +184,7 @@ struct BeanjiTests {
         ]
         let viewModel = CareTasksViewModel(
             repository: repository,
+            careEventRepository: InMemoryCareEventRepository(),
             calendar: calendar,
             now: { referenceDate }
         )
@@ -215,6 +216,8 @@ struct BeanjiTests {
             using: calendar
         )
         let repository = InMemoryUserPlantRepository()
+        let careEventRepository = InMemoryCareEventRepository()
+
         repository.mockPlants = [
             makeTestPlant(
                 name: "Due Today",
@@ -227,30 +230,103 @@ struct BeanjiTests {
                 wateringIntervalDays: 3
             )
         ]
-        let viewModel = CareTasksViewModel(
+
+        let initialViewModel = CareTasksViewModel(
             repository: repository,
+            careEventRepository: careEventRepository,
+            calendar: calendar,
+            now: { referenceDate }
+        )
+        await initialViewModel.loadTasks()
+        guard let task = initialViewModel.visibleTasks.first else {
+            return
+        }
+
+        await initialViewModel.complete(task)
+        let reloadedViewModel = CareTasksViewModel(
+            repository: repository,
+            careEventRepository: careEventRepository,
             calendar: calendar,
             now: { referenceDate }
         )
 
-        await viewModel.loadTasks()
-
-        let initialTasks = viewModel.visibleTasks
-        #expect(initialTasks.count == 1)
-
-        guard let task = initialTasks.first else {
-            return
-        }
-
-        await viewModel.complete(task)
-
-        let visibleTasks = viewModel.visibleTasks
+        await reloadedViewModel.loadTasks()
+        let visibleTasks = reloadedViewModel.visibleTasks
         let completedTaskNames = visibleTasks
             .filter(\.isCompleted)
             .map { $0.plant.name }
 
+        #expect(careEventRepository.mockEvents.count == 1)
         #expect(visibleTasks.count == 1)
         #expect(completedTaskNames == ["Due Today"])
+    }
+
+    @Test
+    @MainActor
+    func wateringCompletionPersistsCareEventAndUpdatesPlant() throws {
+        let calendar = makeTestCalendar()
+        let lastWatered = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 15,
+            using: calendar
+        )
+        let dueDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let completedAt = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 19,
+            using: calendar
+        )
+
+        let schema = Schema([
+            Plant.self,
+            PlantSpeciesInfo.self,
+            CareEvent.self
+        ])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true
+        )
+        let container = try ModelContainer(
+            for: schema,
+            configurations: [configuration]
+        )
+
+        let plantRepository = SwiftDataUserPlantRepository(
+            modelContext: container.mainContext
+        )
+        let careEventRepository = SwiftDataCareEventRepository(
+            modelContext: container.mainContext
+        )
+        let plant = makeTestPlant(
+            name: "Monstera",
+            lastWatered: lastWatered,
+            wateringIntervalDays: 3
+        )
+
+        try plantRepository.savePlant(plant)
+
+        let event = try careEventRepository.recordWateringCompletion(
+            for: plant,
+            dueDate: dueDate,
+            completedAt: completedAt
+        )
+        let storedEvents = try careEventRepository.fetchAllEvents()
+
+        #expect(plant.lastWatered == completedAt)
+        #expect(storedEvents.count == 1)
+        #expect(storedEvents.first?.id == event.id)
+        #expect(storedEvents.first?.plantID == plant.id)
+        #expect(storedEvents.first?.plantName == "Monstera")
+        #expect(storedEvents.first?.kind == CareKind.watering)
+        #expect(storedEvents.first?.dueDate == dueDate)
+        #expect(storedEvents.first?.completedAt == completedAt)
     }
 }
 

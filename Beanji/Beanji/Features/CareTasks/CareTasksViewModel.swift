@@ -12,6 +12,7 @@ import Observation
 @MainActor
 final class CareTasksViewModel {
     private let repository: UserPlantRepository
+    private let careEventRepository: CareEventRepository
     private let calendar: Calendar
     private let now: () -> Date
 
@@ -23,10 +24,12 @@ final class CareTasksViewModel {
 
     init(
         repository: UserPlantRepository,
+        careEventRepository: CareEventRepository,
         calendar: Calendar = .current,
         now: @escaping () -> Date = { Date() }
     ) {
         self.repository = repository
+        self.careEventRepository = careEventRepository
         self.calendar = calendar
         self.now = now
     }
@@ -36,12 +39,17 @@ final class CareTasksViewModel {
 
         switch selectedFilter {
         case .today:
-            let completedTodayTasks = completedTasks.filter {
-                $0.daysUntilDue(
-                    referenceDate: referenceDate,
-                    using: calendar
-                ) <= 0
+            let completedTodayTasks = completedTasks.filter { task in
+                guard let completedAt = task.completedAt else {
+                    return false
+                }
+
+                return calendar.isDate(
+                    completedAt,
+                    inSameDayAs: referenceDate
+                )
             }
+
             let completedPlantIDs = Set(
                 completedTodayTasks.map(\.plant.id)
             )
@@ -113,7 +121,14 @@ final class CareTasksViewModel {
         defer { isLoading = false }
 
         do {
-            plants = try repository.fetchAllPlants()
+            let loadedPlants = try repository.fetchAllPlants()
+            let storedEvents = try careEventRepository.fetchAllEvents()
+
+            plants = loadedPlants
+            completedTasks = makeCompletedTasks(
+                from: storedEvents,
+                matching: loadedPlants
+            )
             errorMessage = nil
         } catch {
             errorMessage = "Pflanzen konnten nicht geladen werden."
@@ -171,32 +186,43 @@ final class CareTasksViewModel {
     }
 
     private func completeWatering(_ task: CareTask) async {
-        let completionDate = now()
-        let plant = task.plant
-
-        plant.lastWatered = completionDate
-
         do {
-            try repository.updatePlant(plant)
-
-            completedTasks.removeAll {
-                $0.plant.id == plant.id
-                && $0.kind == .watering
-            }
-
-            completedTasks.append(
-                CareTask(
-                    plant: plant,
-                    kind: .watering,
-                    dueDate: task.dueDate,
-                    completedAt: completionDate
-                )
+            try careEventRepository.recordWateringCompletion(
+                for: task.plant,
+                dueDate: task.dueDate,
+                completedAt: now()
             )
-
             await loadTasks()
             errorMessage = nil
         } catch {
             errorMessage = "Die Aufgabe konnte nicht gespeichert werden."
+        }
+    }
+
+    private func makeCompletedTasks(
+        from events: [CareEvent],
+        matching plants: [Plant]
+    ) -> [CareTask] {
+        let plantsByID = Dictionary(
+            uniqueKeysWithValues: plants.map {
+                ($0.id, $0)
+            }
+        )
+
+        return events.compactMap { event in
+            guard
+                event.kind == .watering,
+                let plant = plantsByID[event.plantID]
+            else {
+                return nil
+            }
+
+            return CareTask(
+                plant: plant,
+                kind: event.kind,
+                dueDate: event.dueDate,
+                completedAt: event.completedAt
+            )
         }
     }
 
