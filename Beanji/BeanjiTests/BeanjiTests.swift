@@ -86,6 +86,172 @@ struct BeanjiTests {
 
         #expect(restoredPlantCount == initialPlantCount)
     }
+
+    @Test
+    @MainActor
+    func wateringTaskUsesPlantScheduleForDueStatus() {
+        let calendar = makeTestCalendar()
+        let lastWatered = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 15,
+            using: calendar
+        )
+        let expectedDueDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let dayBeforeDueDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 17,
+            using: calendar
+        )
+        let dayAfterDueDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 19,
+            using: calendar
+        )
+        let plant = makeTestPlant(
+            name: "Monstera",
+            lastWatered: lastWatered,
+            wateringIntervalDays: 3
+        )
+
+        let task = CareTask.watering(
+            for: plant,
+            using: calendar
+        )
+        let daysBeforeDueDate = task.daysUntilDue(
+            referenceDate: dayBeforeDueDate,
+            using: calendar
+        )
+        let daysAfterDueDate = task.daysUntilDue(
+            referenceDate: dayAfterDueDate,
+            using: calendar
+        )
+        let isOverdueAfterDueDate = task.isOverdue(
+            referenceDate: dayAfterDueDate,
+            using: calendar
+        )
+
+        #expect(task.dueDate == expectedDueDate)
+        #expect(daysBeforeDueDate == 1)
+        #expect(daysAfterDueDate == -1)
+        #expect(isOverdueAfterDueDate)
+    }
+
+    @Test
+    @MainActor
+    func careTaskFiltersUseInjectedReferenceDate() async {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = [
+            makeTestPlant(
+                name: "Due Today",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 15,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            ),
+            makeTestPlant(
+                name: "Due Tomorrow",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 16,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            ),
+            makeTestPlant(
+                name: "Due In Three Days",
+                lastWatered: referenceDate,
+                wateringIntervalDays: 3
+            )
+        ]
+        let viewModel = CareTasksViewModel(
+            repository: repository,
+            calendar: calendar,
+            now: { referenceDate }
+        )
+
+        await viewModel.loadTasks()
+
+        viewModel.selectedFilter = .today
+        let dueTodayNames = viewModel.visibleTasks.map { $0.plant.name }
+
+        viewModel.selectedFilter = .tomorrow
+        let dueTomorrowNames = viewModel.visibleTasks.map { $0.plant.name }
+
+        viewModel.selectedFilter = .nextThreeDays
+        let upcomingNames = viewModel.visibleTasks.map { $0.plant.name }
+
+        #expect(dueTodayNames == ["Due Today"])
+        #expect(dueTomorrowNames == ["Due Tomorrow"])
+        #expect(upcomingNames == ["Due In Three Days"])
+    }
+
+    @Test
+    @MainActor
+    func completingTodayTaskKeepsItVisibleAsCompleted() async {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = [
+            makeTestPlant(
+                name: "Due Today",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 15,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            )
+        ]
+        let viewModel = CareTasksViewModel(
+            repository: repository,
+            calendar: calendar,
+            now: { referenceDate }
+        )
+
+        await viewModel.loadTasks()
+
+        let initialTasks = viewModel.visibleTasks
+        #expect(initialTasks.count == 1)
+
+        guard let task = initialTasks.first else {
+            return
+        }
+
+        await viewModel.complete(task)
+
+        let visibleTasks = viewModel.visibleTasks
+        let completedTaskNames = visibleTasks
+            .filter(\.isCompleted)
+            .map { $0.plant.name }
+
+        #expect(visibleTasks.count == 1)
+        #expect(completedTaskNames == ["Due Today"])
+    }
 }
 
 private struct TestPlantCatalog: PlantCatalogRepository {
@@ -179,5 +345,44 @@ private func makePlantSpecies(
         imageUrl: nil,
         careLevel: nil,
         description: nil
+    )
+}
+
+private func makeTestCalendar() -> Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    return calendar
+}
+
+private func makeTestDate(
+    year: Int,
+    month: Int,
+    day: Int,
+    using calendar: Calendar
+) -> Date {
+    calendar.date(
+        from: DateComponents(
+            year: year,
+            month: month,
+            day: day,
+            hour: 12
+        )
+    )!
+}
+
+@MainActor
+private func makeTestPlant(
+    name: String,
+    lastWatered: Date,
+    wateringIntervalDays: Int
+) -> Plant {
+    Plant(
+        name: name,
+        speciesName: "Test species",
+        lastWatered: lastWatered,
+        lastFertilized: lastWatered,
+        wateringIntervalDays: wateringIntervalDays,
+        fertilizingIntervalDays: 30,
+        createdAt: lastWatered
     )
 }

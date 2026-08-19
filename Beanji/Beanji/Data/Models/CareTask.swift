@@ -8,7 +8,7 @@
 import Foundation
 
 struct CareTask: Identifiable {
-    enum Kind: Equatable{
+    enum Kind: Equatable {
         case watering
     }
 
@@ -23,5 +23,41 @@ struct CareTask: Identifiable {
 
     var isCompleted: Bool {
         completedAt != nil
+    }
+
+    static func watering(
+        for plant: Plant,
+        using calendar: Calendar
+    ) -> CareTask {
+        CareTask(
+            plant: plant,
+            kind: .watering,
+            dueDate: plant.nextWateringDate(using: calendar),
+            completedAt: nil
+        )
+    }
+
+    func daysUntilDue(
+        referenceDate: Date,
+        using calendar: Calendar
+    ) -> Int {
+        let referenceDay = calendar.startOfDay(for: referenceDate)
+        let dueDay = calendar.startOfDay(for: dueDate)
+
+        return calendar.dateComponents(
+            [.day],
+            from: referenceDay,
+            to: dueDay
+        ).day ?? 0
+    }
+
+    func isOverdue(
+        referenceDate: Date,
+        using calendar: Calendar
+    ) -> Bool {
+        daysUntilDue(
+            referenceDate: referenceDate,
+            using: calendar
+        ) < 0
     }
 }

@@ -13,6 +13,7 @@ import Observation
 final class CareTasksViewModel {
     private let repository: UserPlantRepository
     private let calendar: Calendar
+    private let now: () -> Date
 
     var plants: [Plant] = []
     var selectedFilter: CareTaskFilter = .today
@@ -22,59 +23,57 @@ final class CareTasksViewModel {
 
     init(
         repository: UserPlantRepository,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        now: @escaping () -> Date = { Date() }
     ) {
         self.repository = repository
         self.calendar = calendar
+        self.now = now
     }
 
     var visibleTasks: [CareTask] {
+        let referenceDate = now()
+
         switch selectedFilter {
         case .today:
-            return openTasks
-                .filter { task in
-                    calendar.startOfDay(for: task.dueDate)
-                    <= calendar.startOfDay(for: Date())
-                }
+            let completedTodayTasks = completedTasks.filter {
+                $0.daysUntilDue(
+                    referenceDate: referenceDate,
+                    using: calendar
+                ) <= 0
+            }
+            let completedPlantIDs = Set(
+                completedTodayTasks.map(\.plant.id)
+            )
+            let openTodayTasks = openTasks.filter {
+                $0.daysUntilDue(
+                    referenceDate: referenceDate,
+                    using: calendar
+                ) <= 0
+                && !completedPlantIDs.contains($0.plant.id)
+            }
+
+            return (openTodayTasks + completedTodayTasks)
                 .sorted { $0.dueDate < $1.dueDate }
 
         case .tomorrow:
-            guard let tomorrow = calendar.date(
-                byAdding: .day,
-                value: 1,
-                to: calendar.startOfDay(for: Date())
-            ) else {
-                return []
-            }
-
             return openTasks
                 .filter {
-                    calendar.isDate($0.dueDate, inSameDayAs: tomorrow)
+                    $0.daysUntilDue(
+                        referenceDate: referenceDate,
+                        using: calendar
+                    ) == 1
                 }
                 .sorted { $0.dueDate < $1.dueDate }
 
         case .nextThreeDays:
-            let today = calendar.startOfDay(for: Date())
-
-            guard
-                let dayAfterTomorrow = calendar.date(
-                    byAdding: .day,
-                    value: 2,
-                    to: today
-                ),
-                let endDate = calendar.date(
-                    byAdding: .day,
-                    value: 3,
-                    to: today
-                )
-            else {
-                return []
-            }
-
             return openTasks
                 .filter {
-                    let dueDate = calendar.startOfDay(for: $0.dueDate)
-                    return dueDate >= dayAfterTomorrow && dueDate <= endDate
+                    let days = $0.daysUntilDue(
+                        referenceDate: referenceDate,
+                        using: calendar
+                    )
+                    return (2...3).contains(days)
                 }
                 .sorted { $0.dueDate < $1.dueDate }
 
@@ -89,11 +88,9 @@ final class CareTasksViewModel {
 
     var openTasks: [CareTask] {
         plants.map { plant in
-            CareTask(
-                plant: plant,
-                kind: .watering,
-                dueDate: nextWateringDate(for: plant),
-                completedAt: nil
+            CareTask.watering(
+                for: plant,
+                using: calendar
             )
         }
     }
@@ -124,7 +121,9 @@ final class CareTasksViewModel {
     }
     
     func wasWateredToday(_ task: CareTask) -> Bool {
-        completedTasks.contains { completedTask in
+        let referenceDate = now()
+
+        return completedTasks.contains { completedTask in
             guard
                 completedTask.plant.id == task.plant.id,
                 completedTask.kind == .watering,
@@ -133,7 +132,10 @@ final class CareTasksViewModel {
                 return false
             }
             
-            return calendar.isDateInToday(completedAt)
+            return calendar.isDate(
+                completedAt,
+                inSameDayAs: referenceDate
+            )
         }
     }
     
@@ -149,22 +151,27 @@ final class CareTasksViewModel {
     }
     
     func dueText(for task: CareTask) -> String {
-        let dueDay = calendar.dateComponents(
-            [.day],
-            from: calendar.startOfDay(for: Date()),
-            to: calendar.startOfDay(for: task.dueDate)
-        ).day ?? 0
-        return CareDueTextFormatter.text(daysUntilDue: dueDay, dueDate: task.dueDate)
+        let daysUntilDue = task.daysUntilDue(
+            referenceDate: now(),
+            using: calendar
+        )
+
+        return CareDueTextFormatter.text(
+            daysUntilDue: daysUntilDue,
+            dueDate: task.dueDate
+        )
     }
 
 
     func isOverdue(_ task: CareTask) -> Bool {
-        calendar.startOfDay(for: task.dueDate)
-        < calendar.startOfDay(for: Date())
+        task.isOverdue(
+            referenceDate: now(),
+            using: calendar
+        )
     }
 
     private func completeWatering(_ task: CareTask) async {
-        let completionDate = Date()
+        let completionDate = now()
         let plant = task.plant
 
         plant.lastWatered = completionDate
@@ -193,11 +200,4 @@ final class CareTasksViewModel {
         }
     }
 
-    private func nextWateringDate(for plant: Plant) -> Date {
-        calendar.date(
-            byAdding: .day,
-            value: plant.wateringIntervalDays,
-            to: plant.lastWatered
-        ) ?? plant.lastWatered
-    }
 }
