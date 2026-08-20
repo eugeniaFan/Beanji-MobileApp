@@ -23,6 +23,7 @@ final class AddPlantViewModel {
     var wateringIntervalDays = 7
     var fertilizingIntervalDays = 30
     var errorMessage: String?
+    var onPlantSaved: (() -> Void)?
 
     init(
         repository: UserPlantRepository,
@@ -40,9 +41,7 @@ final class AddPlantViewModel {
         !trimmedName.isEmpty && !trimmedSpeciesName.isEmpty
     }
 
-    @discardableResult
     func save() -> Bool {
-
         guard canSave else {
             errorMessage = "Plant name and species are required."
             return false
@@ -63,7 +62,7 @@ final class AddPlantViewModel {
         do {
             try repository.savePlant(plant)
             errorMessage = nil
-            
+            onPlantSaved?()
             return true
         } catch {
             errorMessage = "The plant could not be saved."

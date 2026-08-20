@@ -11,6 +11,7 @@ import SwiftUI
 struct AllPlantsView: View {
     @Namespace private var pageSelectorAnimation
     @State private var viewModel: AllPlantsViewModel
+    @State private var isPresentingAddPlant = false
 
     init(viewModel: AllPlantsViewModel) {
         _viewModel = State(initialValue: viewModel)
@@ -81,7 +82,7 @@ struct AllPlantsView: View {
             }
         } message: {
             if let plant = viewModel.plantToDelete {
-                Text("\"\(plant.name)\" can not be restored.")
+                Text("\"\(plant.name)\" cannot be restored.")
             }
         }
         .alert(
@@ -98,14 +99,31 @@ struct AllPlantsView: View {
         .task {
             await viewModel.loadInitialData()
         }
+        .sheet(isPresented: $isPresentingAddPlant) {
+            AddPlantView(
+                viewModel: viewModel.makeAddPlantViewModel()
+            )
+        }
     }
 
     private var headerTitle: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack {
             Text("Plants")
                 .font(.largeTitle.bold())
                 .accessibilityAddTraits(.isHeader)
+
+            Spacer()
+
+            if viewModel.selectedPage == .myPlants {
+                Button {
+                    isPresentingAddPlant = true
+                } label: {
+                    Label("Add Plant", systemImage: "plus")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.brown)
             }
+        }
     }
 
     private var searchField: some View {
@@ -251,7 +269,7 @@ struct AllPlantsView: View {
         plantGrid(
             isLoading: viewModel.isCatalogLoading,
             isEmpty: viewModel.filteredCatalogPlants.isEmpty,
-            emptyMessage: "No Plants can be found in the local catalog."
+            emptyMessage: "No plants were found in the local catalog."
         ) {
             ForEach(viewModel.filteredCatalogPlants) { species in
                 NavigationLink {

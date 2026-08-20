@@ -34,7 +34,7 @@ struct ContentView: View {
                 }
             }
             .tabItem {
-                Label("Pflanzen", systemImage: "leaf.fill")
+                Label("Plants", systemImage: "leaf.fill")
             }
         }
         .task {
