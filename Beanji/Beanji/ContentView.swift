@@ -12,14 +12,15 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.plantCatalog) private var plantCatalog
     @Environment(\.makeUserPlantRepository) private var makeUserPlantRepository
-    
+    @Environment(\.makeCareEventRepository) private var makeCareEventRepository
     @State private var allplantsViewModel: AllPlantsViewModel?
 
     var body: some View {
         TabView {
             CareTasksView(
                 viewModel: CareTasksViewModel(
-                    repository: makeUserPlantRepository(modelContext)
+                    repository: makeUserPlantRepository(modelContext),
+                    careEventRepository: makeCareEventRepository(modelContext)
                 )
             )
             .tabItem {
@@ -52,8 +53,15 @@ struct ContentView: View {
         .environment(\.makeUserPlantRepository) { _ in
             InMemoryUserPlantRepository()
         }
+        .environment(\.makeCareEventRepository) { _ in
+            InMemoryCareEventRepository()
+        }
         .modelContainer(
-            for: [Plant.self, PlantSpeciesInfo.self],
+            for: [
+                Plant.self,
+                PlantSpeciesInfo.self,
+                CareEvent.self
+            ],
             inMemory: true
         )
 }
