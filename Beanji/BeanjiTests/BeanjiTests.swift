@@ -21,34 +21,34 @@ struct BeanjiTests {
         )
         viewModel.selectedPage = .allPlants
         await viewModel.loadInitialData()
-        
+
         let initialPlantCount = viewModel.filteredCatalogPlants.count
         #expect(initialPlantCount == 3)
-        
-        
+
+
         viewModel.searchText = "Monstera"
 
         let searchResultCount = viewModel.filteredCatalogPlants.count
         let firstSearchResultName = viewModel.filteredCatalogPlants.first?.commonName
-        
+
         #expect(searchResultCount == 1)
         #expect(firstSearchResultName == "Swiss Cheese Plant")
         viewModel.searchText = ""
 
         let restoredPlantCount = viewModel.filteredCatalogPlants.count
-        
+
         #expect(restoredPlantCount == 3)
     }
-    
+
     @Test
     @MainActor
     func enrichmentRequestsRemoteDataOnlyAfterExplicitSearch() async throws {
         let remoteProvider = TrackingRemoteProvider()
-        
+
         let service = CatalogEnrichmentService(remoteProvider: remoteProvider)
         let initialSearchCallCount = remoteProvider.searchCallCount
         #expect(initialSearchCallCount == 0)
-        
+
         let results = try await service.searchPlants(matching: "Monstera")
         let finalSearchCallCount = remoteProvider.searchCallCount
 
@@ -63,7 +63,7 @@ struct BeanjiTests {
         #expect(remoteResultCount == 1)
         #expect(firstRemoteResultName == "Remote Monstera")
     }
-    
+
     @Test
     @MainActor
     func myPlantsSearchFiltersLoadedPlantsAndRestoresAll() async {
@@ -146,7 +146,7 @@ struct BeanjiTests {
 
     @Test
     @MainActor
-    func careTaskFiltersUseInjectedReferenceDate() async {
+    func todayTasksIncludeOverdueAndDueTodayOnly() async {
         let calendar = makeTestCalendar()
         let referenceDate = makeTestDate(
             year: 2026,
@@ -156,6 +156,16 @@ struct BeanjiTests {
         )
         let repository = InMemoryUserPlantRepository()
         repository.mockPlants = [
+            makeTestPlant(
+                name: "Overdue",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 14,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            ),
             makeTestPlant(
                 name: "Due Today",
                 lastWatered: makeTestDate(
@@ -175,11 +185,6 @@ struct BeanjiTests {
                     using: calendar
                 ),
                 wateringIntervalDays: 3
-            ),
-            makeTestPlant(
-                name: "Due In Three Days",
-                lastWatered: referenceDate,
-                wateringIntervalDays: 3
             )
         ]
         let viewModel = CareTasksViewModel(
@@ -191,18 +196,164 @@ struct BeanjiTests {
 
         await viewModel.loadTasks()
 
-        viewModel.selectedFilter = .today
-        let dueTodayNames = viewModel.visibleTasks.map { $0.plant.name }
+        let todayTaskNames = viewModel.todayTasks.map { $0.plant.name }
 
-        viewModel.selectedFilter = .tomorrow
-        let dueTomorrowNames = viewModel.visibleTasks.map { $0.plant.name }
+        #expect(todayTaskNames == ["Overdue", "Due Today"])
+    }
 
-        viewModel.selectedFilter = .nextThreeDays
-        let upcomingNames = viewModel.visibleTasks.map { $0.plant.name }
+    @Test
+    @MainActor
+    func careEventLoadFailureKeepsOpenTasksVisible() async {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let repository = InMemoryUserPlantRepository()
+        let careEventRepository = ControlledCareEventRepository()
 
-        #expect(dueTodayNames == ["Due Today"])
-        #expect(dueTomorrowNames == ["Due Tomorrow"])
-        #expect(upcomingNames == ["Due In Three Days"])
+        repository.mockPlants = [
+            makeTestPlant(
+                name: "Due Today",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 15,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            )
+        ]
+        careEventRepository.shouldFailFetching = true
+
+        let viewModel = CareTasksViewModel(
+            repository: repository,
+            careEventRepository: careEventRepository,
+            calendar: calendar,
+            now: { referenceDate }
+        )
+
+        await viewModel.loadTasks()
+
+        #expect(viewModel.todayTasks.map { $0.plant.name } == ["Due Today"])
+        #expect(
+            viewModel.errorMessage
+                == "Completed care tasks could not be loaded."
+        )
+    }
+
+    @Test
+    @MainActor
+    func weeklyCareScheduleStartsMondayAndMarksWateringDays() async {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let monday = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 17,
+            using: calendar
+        )
+        let sunday = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 23,
+            using: calendar
+        )
+
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = [
+            makeTestPlant(
+                name: "Due Thursday",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 17,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            ),
+            makeTestPlant(
+                name: "Due Sunday",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 20,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            ),
+            makeTestPlant(
+                name: "Due Next Week",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 21,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            )
+        ]
+
+        let viewModel = CareTasksViewModel(
+            repository: repository,
+            careEventRepository: InMemoryCareEventRepository(),
+            calendar: calendar,
+            now: { referenceDate }
+        )
+
+        await viewModel.loadTasks()
+
+        let weekDays = viewModel.weekDays
+        let markedDayNumbers = weekDays
+            .filter(\.hasWateringTask)
+            .map {
+                calendar.component(
+                    .day,
+                    from: $0.date
+                )
+            }
+        let todayDayNumbers = weekDays
+            .filter(\.isToday)
+            .map {
+                calendar.component(
+                    .day,
+                    from: $0.date
+                )
+            }
+
+        #expect(weekDays.count == 7)
+
+        if let firstDate = weekDays.first?.date {
+            #expect(
+                calendar.isDate(
+                    firstDate,
+                    inSameDayAs: monday
+                )
+            )
+        } else {
+            Issue.record("The weekly schedule has no first day.")
+        }
+
+        if let lastDate = weekDays.last?.date {
+            #expect(
+                calendar.isDate(
+                    lastDate,
+                    inSameDayAs: sunday
+                )
+            )
+        } else {
+            Issue.record("The weekly schedule has no last day.")
+        }
+
+        #expect(markedDayNumbers == [20, 23])
+        #expect(todayDayNumbers == [18])
     }
 
     @Test
@@ -238,7 +389,8 @@ struct BeanjiTests {
             now: { referenceDate }
         )
         await initialViewModel.loadTasks()
-        guard let task = initialViewModel.visibleTasks.first else {
+        guard let task = initialViewModel.todayTasks.first else {
+            Issue.record("The expected task due today is missing.")
             return
         }
 
@@ -251,14 +403,70 @@ struct BeanjiTests {
         )
 
         await reloadedViewModel.loadTasks()
-        let visibleTasks = reloadedViewModel.visibleTasks
-        let completedTaskNames = visibleTasks
+        let todayTasks = reloadedViewModel.todayTasks
+        let completedTaskNames = todayTasks
             .filter(\.isCompleted)
             .map { $0.plant.name }
+        let completedDueDay = reloadedViewModel.weekDays.first {
+            calendar.isDate(
+                $0.date,
+                inSameDayAs: task.dueDate
+            )
+        }
 
         #expect(careEventRepository.mockEvents.count == 1)
-        #expect(visibleTasks.count == 1)
+        #expect(todayTasks.count == 1)
         #expect(completedTaskNames == ["Due Today"])
+        #expect(completedDueDay?.hasWateringTask == true)
+    }
+
+    @Test
+    @MainActor
+    func completionKeepsCareEventReloadErrorVisible() async {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 18,
+            using: calendar
+        )
+        let repository = InMemoryUserPlantRepository()
+        let careEventRepository = ControlledCareEventRepository()
+
+        repository.mockPlants = [
+            makeTestPlant(
+                name: "Due Today",
+                lastWatered: makeTestDate(
+                    year: 2026,
+                    month: 8,
+                    day: 15,
+                    using: calendar
+                ),
+                wateringIntervalDays: 3
+            )
+        ]
+
+        let viewModel = CareTasksViewModel(
+            repository: repository,
+            careEventRepository: careEventRepository,
+            calendar: calendar,
+            now: { referenceDate }
+        )
+
+        await viewModel.loadTasks()
+
+        guard let task = viewModel.todayTasks.first else {
+            Issue.record("The expected task due today is missing.")
+            return
+        }
+
+        careEventRepository.shouldFailFetching = true
+        await viewModel.complete(task)
+
+        #expect(
+            viewModel.errorMessage
+                == "Completed care tasks could not be loaded."
+        )
     }
 
     @Test
@@ -348,7 +556,7 @@ private struct TestPlantCatalog: PlantCatalogRepository {
             scientificName: "Epipremnum aureum"
         ),
     ]
-    
+
     func searchPlants(matching query: String) async throws -> [PlantSpecies] {
         let trimmedQuery = query.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -400,6 +608,37 @@ private final class TrackingRemoteProvider: PlantSpeciesProvider {
             id: id,
             commonName: "Remote Monstera",
             scientificName: "Monstera deliciosa"
+        )
+    }
+}
+
+// Allows error-path tests to fail event loading without replacing repository behavior.
+@MainActor
+private final class ControlledCareEventRepository: CareEventRepository {
+    private enum TestError: Error {
+        case fetchFailed
+    }
+
+    private let storage = InMemoryCareEventRepository()
+    var shouldFailFetching = false
+
+    func fetchAllEvents() throws -> [CareEvent] {
+        if shouldFailFetching {
+            throw TestError.fetchFailed
+        }
+
+        return try storage.fetchAllEvents()
+    }
+
+    func recordWateringCompletion(
+        for plant: Plant,
+        dueDate: Date,
+        completedAt: Date
+    ) throws -> CareEvent {
+        try storage.recordWateringCompletion(
+            for: plant,
+            dueDate: dueDate,
+            completedAt: completedAt
         )
     }
 }

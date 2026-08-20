@@ -17,7 +17,6 @@ final class CareTasksViewModel {
     private let now: () -> Date
 
     var plants: [Plant] = []
-    var selectedFilter: CareTaskFilter = .today
     var completedTasks: [CareTask] = []
     var isLoading = false
     var errorMessage: String?
@@ -34,64 +33,33 @@ final class CareTasksViewModel {
         self.now = now
     }
 
-    var visibleTasks: [CareTask] {
+    // Replaces a plant's new open task with today's completion to avoid duplicate rows.
+    var todayTasks: [CareTask] {
         let referenceDate = now()
-
-        switch selectedFilter {
-        case .today:
-            let completedTodayTasks = completedTasks.filter { task in
-                guard let completedAt = task.completedAt else {
-                    return false
-                }
-
-                return calendar.isDate(
-                    completedAt,
-                    inSameDayAs: referenceDate
-                )
+        let completedTodayTasks = completedTasks.filter { task in
+            guard let completedAt = task.completedAt else {
+                return false
             }
 
-            let completedPlantIDs = Set(
-                completedTodayTasks.map(\.plant.id)
+            return calendar.isDate(
+                completedAt,
+                inSameDayAs: referenceDate
             )
-            let openTodayTasks = openTasks.filter {
-                $0.daysUntilDue(
-                    referenceDate: referenceDate,
-                    using: calendar
-                ) <= 0
-                && !completedPlantIDs.contains($0.plant.id)
-            }
-
-            return (openTodayTasks + completedTodayTasks)
-                .sorted { $0.dueDate < $1.dueDate }
-
-        case .tomorrow:
-            return openTasks
-                .filter {
-                    $0.daysUntilDue(
-                        referenceDate: referenceDate,
-                        using: calendar
-                    ) == 1
-                }
-                .sorted { $0.dueDate < $1.dueDate }
-
-        case .nextThreeDays:
-            return openTasks
-                .filter {
-                    let days = $0.daysUntilDue(
-                        referenceDate: referenceDate,
-                        using: calendar
-                    )
-                    return (2...3).contains(days)
-                }
-                .sorted { $0.dueDate < $1.dueDate }
-
-        case .completed:
-            return completedTasks
-                .sorted {
-                    ($0.completedAt ?? .distantPast)
-                    > ($1.completedAt ?? .distantPast)
-                }
         }
+
+        let completedPlantIDs = Set(
+            completedTodayTasks.map(\.plant.id)
+        )
+        let openTodayTasks = openTasks.filter {
+            $0.daysUntilDue(
+                referenceDate: referenceDate,
+                using: calendar
+            ) <= 0
+            && !completedPlantIDs.contains($0.plant.id)
+        }
+
+        return (openTodayTasks + completedTodayTasks)
+            .sorted { $0.dueDate < $1.dueDate }
     }
 
     var openTasks: [CareTask] {
@@ -103,39 +71,79 @@ final class CareTasksViewModel {
         }
     }
 
-    var emptyStateText: String {
-        switch selectedFilter {
-        case .today:
-            return "Für heute ist alles erledigt."
-        case .tomorrow:
-            return "Für morgen sind keine Aufgaben geplant."
-        case .nextThreeDays:
-            return "In den nächsten drei Tagen steht nichts an."
-        case .completed:
-            return "Noch keine Aufgabe erledigt."
+    var weekDays: [CareCalendarDay] {
+        let referenceDate = now()
+        let calendar = mondayFirstCalendar
+
+        let weekStart =
+            calendar.dateInterval(
+                of: .weekOfYear,
+                for: referenceDate
+            )?.start
+            ?? calendar.startOfDay(for: referenceDate)
+
+        // Completed tasks keep their original due day marked after watering reschedules the plant.
+        let scheduledTasks = openTasks + completedTasks
+
+        return (0..<7).map { dayOffset in
+            let date =
+                calendar.date(
+                    byAdding: .day,
+                    value: dayOffset,
+                    to: weekStart
+                )
+                ?? weekStart
+
+            let hasWateringTask = scheduledTasks.contains { task in
+                task.kind == .watering
+                    && calendar.isDate(
+                        task.dueDate,
+                        inSameDayAs: date
+                    )
+            }
+
+            return CareCalendarDay(
+                date: date,
+                isToday: calendar.isDate(
+                    date,
+                    inSameDayAs: referenceDate
+                ),
+                hasWateringTask: hasWateringTask
+            )
         }
     }
 
+    var emptyStateText: String {
+        "No watering tasks are due today."
+    }
+
+    // Loads plants independently so event-history failures do not hide open tasks.
     func loadTasks() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let loadedPlants = try repository.fetchAllPlants()
-            let storedEvents = try careEventRepository.fetchAllEvents()
+            plants = try repository.fetchAllPlants()
+        } catch {
+            errorMessage = "Plants could not be loaded."
+            return
+        }
 
-            plants = loadedPlants
+        do {
+            let storedEvents = try careEventRepository.fetchAllEvents()
             completedTasks = makeCompletedTasks(
                 from: storedEvents,
-                matching: loadedPlants
+                matching: plants
             )
             errorMessage = nil
         } catch {
-            errorMessage = "Pflanzen konnten nicht geladen werden."
+            completedTasks = []
+            errorMessage = "Completed care tasks could not be loaded."
         }
     }
-    
-    func wasWateredToday(_ task: CareTask) -> Bool {
+
+    // Prevents duplicate watering events when completion is triggered more than once.
+    private func wasWateredToday(_ task: CareTask) -> Bool {
         let referenceDate = now()
 
         return completedTasks.contains { completedTask in
@@ -146,25 +154,25 @@ final class CareTasksViewModel {
             else {
                 return false
             }
-            
+
             return calendar.isDate(
                 completedAt,
                 inSameDayAs: referenceDate
             )
         }
     }
-    
+
     func complete(_ task: CareTask) async {
         guard !wasWateredToday(task) else {
             return
         }
-        
+
         switch task.kind {
         case .watering:
             await completeWatering(task)
         }
     }
-    
+
     func dueText(for task: CareTask) -> String {
         let daysUntilDue = task.daysUntilDue(
             referenceDate: now(),
@@ -185,6 +193,7 @@ final class CareTasksViewModel {
         )
     }
 
+    // Refreshes derived task state only after the repository records the atomic update.
     private func completeWatering(_ task: CareTask) async {
         do {
             try careEventRepository.recordWateringCompletion(
@@ -193,12 +202,19 @@ final class CareTasksViewModel {
                 completedAt: now()
             )
             await loadTasks()
-            errorMessage = nil
         } catch {
-            errorMessage = "Die Aufgabe konnte nicht gespeichert werden."
+            errorMessage = "The care task could not be saved."
         }
     }
 
+    // Keeps the week layout stable across device locale settings.
+    private var mondayFirstCalendar: Calendar {
+        var mondayCalendar = calendar
+        mondayCalendar.firstWeekday = 2
+        return mondayCalendar
+    }
+
+    // Reconnects event snapshots to live plants and ignores events for deleted plants.
     private func makeCompletedTasks(
         from events: [CareEvent],
         matching plants: [Plant]

@@ -11,8 +11,7 @@ struct CareTasksRow: View {
     let task: CareTask
     let dueText: String
     let isOverdue: Bool
-    let wasWateredToday: Bool
-    
+
     let onComplete: () -> Void
 
     var body: some View {
@@ -47,8 +46,6 @@ struct CareTasksRow: View {
 
             if task.isCompleted {
                 completedIndicator
-            } else if wasWateredToday {
-                wateredTodayIndicator
             } else {
                 completeButton
             }
@@ -83,22 +80,6 @@ struct CareTasksRow: View {
         }
         .foregroundStyle(.green.opacity(0.9))
         .accessibilityElement(children: .combine)
-    }
-    
-    private var wateredTodayIndicator: some View {
-        VStack(spacing: 4) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.title2)
-            
-            Text("Watered\ntoday")
-                .font(.caption2)
-                .multilineTextAlignment(.center)
-        }
-        .foregroundStyle(.green.opacity(0.9))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            "\(task.plant.name) was watered today"
-        )
     }
     
     private var statusText: String {
@@ -160,13 +141,11 @@ struct CareTasksRow: View {
         task: taskOne,
         dueText: "Due today",
         isOverdue: false,
-        wasWateredToday: false,
         onComplete: { }
     )
 }
 
-#Preview("Watered Today, Due Tomorrow") {
-    let calendar = Calendar.current
+#Preview("Completed Today") {
     let today = Date()
 
     let plant = Plant(
@@ -182,15 +161,14 @@ struct CareTasksRow: View {
     let task = CareTask(
         plant: plant,
         kind: .watering,
-        dueDate: plant.nextWateringDate(using: calendar),
-        completedAt: nil
+        dueDate: today,
+        completedAt: today
     )
 
     CareTasksRow(
         task: task,
-        dueText: "Due tomorrow",
+        dueText: "Due today",
         isOverdue: false,
-        wasWateredToday: true,
         onComplete: {}
     )
 }

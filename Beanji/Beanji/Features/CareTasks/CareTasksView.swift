@@ -20,22 +20,21 @@ struct CareTasksView: View {
         @Bindable var viewModel = viewModel
 
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                filters
-
-                if viewModel.isLoading && viewModel.visibleTasks.isEmpty {
-                    loadingView
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
+                    todaySection
+                    CareWeekCalendarView(days: viewModel.weekDays)
                 }
-                else if viewModel.visibleTasks.isEmpty {
-                    emptyState
-                }
-                else {
-                    taskList
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
+                .frame(
+                    maxWidth: .infinity,
+                    alignment: .topLeading
+                )
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
+            .scrollIndicators(.hidden)
             .frame(
                 maxWidth: .infinity,
                 maxHeight: .infinity,
@@ -53,7 +52,7 @@ struct CareTasksView: View {
                 await viewModel.loadTasks()
             }
             .alert(
-                "Fehler",
+                "Error",
                 isPresented: Binding(
                     get: { viewModel.errorMessage != nil },
                     set: {
@@ -72,6 +71,24 @@ struct CareTasksView: View {
         }
     }
 
+    private var todaySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Today")
+                .font(.title2.bold())
+                .accessibilityAddTraits(.isHeader)
+
+            if viewModel.isLoading && viewModel.todayTasks.isEmpty {
+                loadingView
+            }
+            else if viewModel.todayTasks.isEmpty {
+                emptyState
+            }
+            else {
+                taskList
+            }
+        }
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Care")
@@ -85,46 +102,14 @@ struct CareTasksView: View {
         }
     }
 
-    private var filters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(CareTaskFilter.allCases) { filter in
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.selectedFilter = filter
-                        }
-                    } label: {
-                        Text(filter.rawValue)
-                            .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .background(
-                                viewModel.selectedFilter == filter
-                                    ? Color.primary
-                                    : Color(.secondarySystemGroupedBackground)
-                            )
-                            .foregroundStyle(
-                                viewModel.selectedFilter == filter
-                                    ? Color(.systemBackground)
-                                    : Color.primary
-                            )
-                            .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
     private var taskList: some View {
-        ScrollView {
+        LazyVStack(spacing: 12) {
             LazyVStack(spacing: 12) {
-                ForEach(viewModel.visibleTasks) { task in
+                ForEach(viewModel.todayTasks) { task in
                     CareTasksRow(
                         task: task,
                         dueText: viewModel.dueText(for: task),
-                        isOverdue: viewModel.isOverdue(task),
-                        wasWateredToday: viewModel.wasWateredToday(task)
+                        isOverdue: viewModel.isOverdue(task)
                     ) {
                         Task {
                             await viewModel.complete(task)
@@ -132,23 +117,34 @@ struct CareTasksView: View {
                     }
                 }
             }
-            .padding(.bottom, 24)
         }
-        .scrollIndicators(.hidden)
     }
 
     private var loadingView: some View {
         ProgressView()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
     }
 
     private var emptyState: some View {
-        ContentUnavailableView(
-            "Alles im grünen Bereich",
-            systemImage: "leaf.circle",
-            description: Text(viewModel.emptyStateText)
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        HStack(spacing: 12) {
+            Image(systemName: "leaf.circle.fill")
+                .font(.title2)
+                .foregroundStyle(.green)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Everything is good to go.")
+                    .font(.headline)
+
+                Text(viewModel.emptyStateText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 }
 
