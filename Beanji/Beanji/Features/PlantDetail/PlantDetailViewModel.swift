@@ -114,7 +114,7 @@ final class PlantDetailViewModel {
         case .editablePlant(let plant):
             return plant.name
         case .readOnlySpecies(let species):
-            return species.commonName
+            return LocalizedText.catalogValue(species.commonName)
         }
     }
 
@@ -142,38 +142,47 @@ final class PlantDetailViewModel {
     var descriptionText: String? {
         let trimmed = species.description?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let trimmed, !trimmed.isEmpty else { return nil }
-        return trimmed
+        return LocalizedText.catalogValue(trimmed)
     }
 
     // MARK: - Ideal Conditions
 
     var wateringConditionText: String {
         if let plant = editablePlant {
-            return "Every \(plant.wateringIntervalDays) days"
+            return LocalizedText.everyDays(plant.wateringIntervalDays)
         }
         if let frequency = species.wateringFrequency {
-            return "Every \(cleaned(frequency.value)) days"
+            guard let days = Int(cleaned(frequency.value)) else {
+                return LocalizedText.catalogValue(frequency.value)
+            }
+            return LocalizedText.everyDays(days)
         }
-        return species.watering ?? "Unknown"
+        return species.watering.map(LocalizedText.catalogValue)
+            ?? String(localized: "Unknown")
     }
 
     var fertilizingConditionText: String {
         if let plant = editablePlant {
-            return "Every \(plant.fertilizingIntervalDays) days"
+            return LocalizedText.everyDays(plant.fertilizingIntervalDays)
         }
     
-        return "Unknown"
+        return String(localized: "Unknown")
     }
 
     var sunlightConditionText: String {
         guard let sunlight = species.sunlight, !sunlight.isEmpty else {
-            return "Unknown"
+            return String(localized: "Unknown")
         }
-        return sunlight.joined(separator: ", ")
+        return sunlight
+            .map(LocalizedText.catalogValue)
+            .formatted(.list(type: .and))
     }
 
     var careConditionText: String {
-        species.careLevel ?? species.maintenance ?? "Unknown"
+        guard let care = species.careLevel ?? species.maintenance else {
+            return String(localized: "Unknown")
+        }
+        return LocalizedText.catalogValue(care)
     }
 
     // Manual plants omit conditions that can only come from catalog metadata.
@@ -235,7 +244,10 @@ final class PlantDetailViewModel {
             enrichedSpecies = try await plantSpeciesProvider.getPlantDetail(id: baseSpecies.speciesId)
             errorMessage = nil
         } catch {
-            errorMessage = "Plant details could not be loaded: \(error.localizedDescription)"
+            errorMessage = LocalizedText.format(
+                "Plant details could not be loaded: %@",
+                error.localizedDescription
+            )
         }
         isLoading = false
     }
@@ -248,7 +260,9 @@ final class PlantDetailViewModel {
             return true
         }
         catch {
-            errorMessage = "The plant could not be deleted."
+            errorMessage = String(
+                localized: "The plant could not be deleted."
+            )
             return false
         }
     }
@@ -267,17 +281,24 @@ final class PlantDetailViewModel {
             errorMessage = nil
         }
         catch {
-            errorMessage = "The plant could not be added."
+            errorMessage = String(localized: "The plant could not be added.")
         }
     }
 
     var intervalText: String? {
         if let plant = editablePlant {
-            return "\(plant.wateringIntervalDays) days"
+            return LocalizedText.dayCount(plant.wateringIntervalDays)
         }
 
         if let frequency = species.wateringFrequency {
-            return "\(frequency.value) \(frequency.unit)"
+            guard let days = Int(cleaned(frequency.value)) else {
+                return LocalizedText.format(
+                    "%@ %@",
+                    frequency.value,
+                    LocalizedText.catalogValue(frequency.unit)
+                )
+            }
+            return LocalizedText.dayCount(days)
         }
 
         return nil

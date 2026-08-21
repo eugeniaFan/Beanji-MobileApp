@@ -17,13 +17,13 @@ enum UserPlantRepositoryError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fetchFailed:
-            return "Could not load saved plants."
+            return String(localized: "Could not load saved plants.")
         case .saveFailed:
-            return "Could not save the plant."
+            return String(localized: "Could not save the plant.")
         case .deleteFailed:
-            return "Could not delete the plant."
+            return String(localized: "Could not delete the plant.")
         case .updateFailed:
-            return "Could not update the plant."
+            return String(localized: "Could not update the plant.")
         }
     }
 }

@@ -131,6 +131,7 @@ struct CareTasksView: View {
             Image(systemName: "leaf.circle.fill")
                 .font(.title2)
                 .foregroundStyle(.green)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Everything is good to go.")

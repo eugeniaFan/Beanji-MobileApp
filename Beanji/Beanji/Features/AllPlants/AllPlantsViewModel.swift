@@ -116,7 +116,10 @@ final class AllPlantsViewModel {
             errorMessage = nil
         } catch {
             errorMessage =
-                "Could not load saved plants: \(error.localizedDescription)"
+                LocalizedText.format(
+                    "Could not load saved plants: %@",
+                    error.localizedDescription
+                )
         }
     }
     
@@ -135,7 +138,10 @@ final class AllPlantsViewModel {
             errorMessage = nil
         } catch {
             errorMessage =
-                "Could not load the plant catalog: \(error.localizedDescription)"
+                LocalizedText.format(
+                    "Could not load the plant catalog: %@",
+                    error.localizedDescription
+                )
         }
     }
     
@@ -148,7 +154,10 @@ final class AllPlantsViewModel {
             errorMessage = nil
         } catch {
             errorMessage =
-                "Could not delete the plant: \(error.localizedDescription)"
+                LocalizedText.format(
+                    "Could not delete the plant: %@",
+                    error.localizedDescription
+                )
         }
         isLoading = false
     }
@@ -187,6 +196,8 @@ final class AllPlantsViewModel {
             }
             
             return species.commonName.localizedCaseInsensitiveContains(query)
+                || LocalizedText.catalogValue(species.commonName)
+                    .localizedCaseInsensitiveContains(query)
                 || species.scientificName.localizedCaseInsensitiveContains(query)
         }
     }
@@ -251,11 +262,11 @@ func nextWateringText(for plant: Plant) -> String {
     let days = plant.daysUntilNextWatering()
 
     if days <= 0 {
-        return "Water today"
+        return String(localized: "Water today")
     } else if days == 1 {
-        return "Tomorrow"
+        return String(localized: "Tomorrow")
     } else {
-        return "In \(days) days"
+        return LocalizedText.format("In %lld days", Int64(days))
     }
 }
 

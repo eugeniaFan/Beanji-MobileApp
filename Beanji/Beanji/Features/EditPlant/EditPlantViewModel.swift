@@ -63,7 +63,7 @@ final class EditPlantViewModel {
             onPlantUpdated?()
             return true
         } catch {
-            errorMessage = "Pflanze konnte nicht gespeichert werden."
+            errorMessage = String(localized: "The plant could not be saved.")
             return false
         }
     }

@@ -43,7 +43,9 @@ final class AddPlantViewModel {
 
     func save() -> Bool {
         guard canSave else {
-            errorMessage = "Plant name and species are required."
+            errorMessage = String(
+                localized: "Plant name and species are required."
+            )
             return false
         }
 
@@ -65,7 +67,7 @@ final class AddPlantViewModel {
             onPlantSaved?()
             return true
         } catch {
-            errorMessage = "The plant could not be saved."
+            errorMessage = String(localized: "The plant could not be saved.")
             return false
         }
     }

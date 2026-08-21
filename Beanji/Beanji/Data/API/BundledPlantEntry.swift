@@ -193,21 +193,46 @@ enum LocalCatalogValidationError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .emptyCatalog:
-            return "The local catalog must contain at least one plant."
+            return String(
+                localized: "The local catalog must contain at least one plant."
+            )
         case .invalidID(let id):
-            return "Catalog plant ID \(id) must be greater than zero."
+            return LocalizedText.format(
+                "Catalog plant ID %lld must be greater than zero.",
+                Int64(id)
+            )
         case .duplicateID(let id):
-            return "Catalog plant ID \(id) is duplicated."
+            return LocalizedText.format(
+                "Catalog plant ID %lld is duplicated.",
+                Int64(id)
+            )
         case .duplicateScientificName(let name):
-            return "Scientific name \(name) is duplicated."
+            return LocalizedText.format(
+                "Scientific name %@ is duplicated.",
+                name
+            )
         case .emptyRequiredValue(let plantID, let field):
-            return "Catalog plant \(plantID) has an empty \(field) value."
+            return LocalizedText.format(
+                "Catalog plant %lld has an empty %@ value.",
+                Int64(plantID),
+                field
+            )
         case .invalidWateringInterval(let plantID, let value):
-            return "Catalog plant \(plantID) has invalid watering interval \(value)."
+            return LocalizedText.format(
+                "Catalog plant %lld has invalid watering interval %lld.",
+                Int64(plantID),
+                Int64(value)
+            )
         case .missingLightRequirement(let plantID):
-            return "Catalog plant \(plantID) needs at least one light requirement."
+            return LocalizedText.format(
+                "Catalog plant %lld needs at least one light requirement.",
+                Int64(plantID)
+            )
         case .duplicateLightRequirement(let plantID):
-            return "Catalog plant \(plantID) contains duplicate light requirements."
+            return LocalizedText.format(
+                "Catalog plant %lld contains duplicate light requirements.",
+                Int64(plantID)
+            )
         }
     }
 }

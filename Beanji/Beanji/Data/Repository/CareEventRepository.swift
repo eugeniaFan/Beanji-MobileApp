@@ -15,9 +15,13 @@ enum CareEventRepositoryError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fetchFailed:
-            return "Could not load completed care actions."
+            return String(
+                localized: "Could not load completed care actions."
+            )
         case .recordFailed:
-            return "Could not save the completed care action."
+            return String(
+                localized: "Could not save the completed care action."
+            )
         }
     }
 }

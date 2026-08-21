@@ -82,7 +82,12 @@ struct AllPlantsView: View {
             }
         } message: {
             if let plant = viewModel.plantToDelete {
-                Text("\"\(plant.name)\" cannot be restored.")
+                Text(
+                    LocalizedText.format(
+                        "\"%@\" cannot be restored.",
+                        plant.name
+                    )
+                )
             }
         }
         .alert(
@@ -118,7 +123,7 @@ struct AllPlantsView: View {
                 Button {
                     isPresentingAddPlant = true
                 } label: {
-                    Label("Add Plant", systemImage: "plus")
+                    Label("New Plant", systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.brown)
@@ -130,6 +135,7 @@ struct AllPlantsView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
 
             TextField(
                 "Search plants...",
@@ -207,7 +213,9 @@ struct AllPlantsView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityValue(
-                    isSelected ? "Selected" : "Not selected"
+                    isSelected
+                        ? String(localized: "Selected")
+                        : String(localized: "Not selected")
                 )
             }
         }
@@ -243,7 +251,7 @@ struct AllPlantsView: View {
         plantGrid(
             isLoading: viewModel.isLoading,
             isEmpty: viewModel.filteredMyPlants.isEmpty,
-            emptyMessage: "No plants here."
+            emptyMessage: String(localized: "No plants here.")
         ) {
             ForEach(viewModel.filteredMyPlants) { plant in
                 NavigationLink {
@@ -269,7 +277,9 @@ struct AllPlantsView: View {
         plantGrid(
             isLoading: viewModel.isCatalogLoading,
             isEmpty: viewModel.filteredCatalogPlants.isEmpty,
-            emptyMessage: "No plants were found in the local catalog."
+            emptyMessage: String(
+                localized: "No plants were found in the local catalog."
+            )
         ) {
             ForEach(viewModel.filteredCatalogPlants) { species in
                 NavigationLink {

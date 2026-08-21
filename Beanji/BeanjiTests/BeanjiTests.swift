@@ -215,7 +215,9 @@ struct BeanjiTests {
         #expect(!didSave)
         #expect(
             viewModel.errorMessage
-                == "Plant name and species are required."
+                == String(
+                    localized: "Plant name and species are required."
+                )
         )
         #expect(repository.mockPlants.isEmpty)
     }
@@ -462,7 +464,7 @@ struct BeanjiTests {
         #expect(viewModel.isOverdue(overdueTask))
         #expect(
             viewModel.dueText(for: overdueTask)
-                == "Overdue since yesterday"
+                == String(localized: "Overdue since yesterday")
         )
     }
 
@@ -505,7 +507,9 @@ struct BeanjiTests {
         #expect(viewModel.todayTasks.map { $0.plant.name } == ["Due Today"])
         #expect(
             viewModel.errorMessage
-                == "Completed care tasks could not be loaded."
+                == String(
+                    localized: "Completed care tasks could not be loaded."
+                )
         )
     }
 
@@ -738,7 +742,9 @@ struct BeanjiTests {
 
         #expect(
             viewModel.errorMessage
-                == "Completed care tasks could not be loaded."
+                == String(
+                    localized: "Completed care tasks could not be loaded."
+                )
         )
     }
 

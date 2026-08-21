@@ -14,6 +14,7 @@ struct SpeciesCardView: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .topLeading) {
                 SpeciesImageView(species: species)
+                    .accessibilityHidden(true)
                 
                 HStack(spacing: 4) {
                     Image(systemName: "book.fill")
@@ -32,7 +33,7 @@ struct SpeciesCardView: View {
             }
             
             VStack(alignment: .leading) {
-                Text(species.commonName)
+                Text(LocalizedText.catalogValue(species.commonName))
                     .font(.headline)
                     .lineLimit(1)
                 
