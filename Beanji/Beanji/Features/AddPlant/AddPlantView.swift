@@ -39,7 +39,9 @@ struct AddPlantView: View {
                     )
 
                     Stepper(
-                        "Water every \(viewModel.wateringIntervalDays) days",
+                        LocalizedText.waterEveryDays(
+                            viewModel.wateringIntervalDays
+                        ),
                         value: $viewModel.wateringIntervalDays,
                         in: 1 ... 30
                     )
@@ -51,7 +53,9 @@ struct AddPlantView: View {
                     )
 
                     Stepper(
-                        "Fertilize every \(viewModel.fertilizingIntervalDays) days",
+                        LocalizedText.fertilizeEveryDays(
+                            viewModel.fertilizingIntervalDays
+                        ),
                         value: $viewModel.fertilizingIntervalDays,
                         in: 7 ... 90
                     )
@@ -71,15 +75,19 @@ struct AddPlantView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
                     }
+                    .accessibilityLabel("Cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button {
                         savePlant()
+                    } label: {
+                        Image(systemName: "checkmark")
                     }
+                    .accessibilityLabel("Save")
                     .disabled(!viewModel.canSave)
                 }
             }

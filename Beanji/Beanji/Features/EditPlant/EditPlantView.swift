@@ -20,36 +20,41 @@ struct EditPlantView: View {
 
         NavigationStack {
             Form {
-                Section("Basis") {
+                Section("Basic information") {
                     TextField("Name", text: $viewModel.name)
-                    TextField("Standort", text: $viewModel.location)
+                    TextField("Location", text: $viewModel.location)
                 }
 
-                Section("Pflege") {
+                Section("Care schedule") {
                     Stepper(
-                        "Gießen alle \(viewModel.wateringIntervalDays) Tage",
+                        LocalizedText.waterEveryDays(
+                            viewModel.wateringIntervalDays
+                        ),
                         value: $viewModel.wateringIntervalDays,
                         in: 1 ... 30
                     )
                     Stepper(
-                        "Düngen alle \(viewModel.fertilizingIntervalDays) Tage",
+                        LocalizedText.fertilizeEveryDays(
+                            viewModel.fertilizingIntervalDays
+                        ),
                         value: $viewModel.fertilizingIntervalDays,
                         in: 7 ... 90
                     )
                 }
 
-                Section("Notizen") {
-                    TextField("Notizen", text: $viewModel.notes, axis: .vertical)
+                Section("Notes") {
+                    TextField("Notes", text: $viewModel.notes, axis: .vertical)
                         .lineLimit(3 ... 6)
                 }
             }
-            .navigationTitle("Pflanze bearbeiten")
+            .navigationTitle("Edit Plant")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark")
                     }
+                    .accessibilityLabel("Cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -60,13 +65,13 @@ struct EditPlantView: View {
                         }
                     } label: {
                         Image(systemName: "checkmark")
-                            .accessibilityLabel("Speichern")
                     }
+                    .accessibilityLabel("Save")
                     .disabled(!viewModel.canSave || viewModel.isSaving)
                 }
             }
             .alert(
-                "Fehler",
+                "Error",
                 isPresented: Binding(
                     get: { viewModel.errorMessage != nil },
                     set: { if !$0 { viewModel.errorMessage = nil } }

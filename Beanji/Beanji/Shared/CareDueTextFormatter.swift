@@ -14,14 +14,17 @@ enum CareDueTextFormatter {
         case ..<0:
             let overdueDays = abs(days)
             return overdueDays == 1
-                ? "Overdue since yesterday"
-                : "\(overdueDays) days overdue"
+                ? String(localized: "Overdue since yesterday")
+                : LocalizedText.format(
+                    "%lld days overdue",
+                    Int64(overdueDays)
+                )
 
         case 0:
-            return "Due today"
+            return String(localized: "Due today")
 
         case 1:
-            return "Due tomorrow"
+            return String(localized: "Due tomorrow")
 
         default:
             return dueDate.formatted(

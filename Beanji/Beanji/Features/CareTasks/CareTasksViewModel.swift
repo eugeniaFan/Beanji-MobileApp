@@ -114,7 +114,7 @@ final class CareTasksViewModel {
     }
 
     var emptyStateText: String {
-        "No watering tasks are due today."
+        String(localized: "No watering tasks are due today.")
     }
 
     // Loads plants independently so event-history failures do not hide open tasks.
@@ -125,7 +125,7 @@ final class CareTasksViewModel {
         do {
             plants = try repository.fetchAllPlants()
         } catch {
-            errorMessage = "Plants could not be loaded."
+            errorMessage = String(localized: "Plants could not be loaded.")
             return
         }
 
@@ -138,7 +138,9 @@ final class CareTasksViewModel {
             errorMessage = nil
         } catch {
             completedTasks = []
-            errorMessage = "Completed care tasks could not be loaded."
+            errorMessage = String(
+                localized: "Completed care tasks could not be loaded."
+            )
         }
     }
 
@@ -203,7 +205,9 @@ final class CareTasksViewModel {
             )
             await loadTasks()
         } catch {
-            errorMessage = "The care task could not be saved."
+            errorMessage = String(
+                localized: "The care task could not be saved."
+            )
         }
     }
 

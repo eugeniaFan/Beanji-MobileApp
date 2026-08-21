@@ -63,7 +63,13 @@ struct CareTasksRow: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Mark \(task.plant.name) as watered")
+        .accessibilityLabel(
+            LocalizedText.format(
+                "Mark %@ as watered",
+                task.plant.name
+            )
+        )
+        .accessibilityHint("Updates the next watering date")
     }
 
     private var completedIndicator: some View {
@@ -73,7 +79,12 @@ struct CareTasksRow: View {
         }
         .foregroundStyle(.green.opacity(0.9))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Watering completed for \(task.plant.name)")
+        .accessibilityLabel(
+            LocalizedText.format(
+                "Watering completed for %@",
+                task.plant.name
+            )
+        )
     }
     
     private var statusText: String {
@@ -82,7 +93,7 @@ struct CareTasksRow: View {
                 date: .omitted,
                 time: .shortened
             )
-            return "Done at \(formattedTime)"
+            return LocalizedText.format("Done at %@", formattedTime)
         }
 
         return dueText

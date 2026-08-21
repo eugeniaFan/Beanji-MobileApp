@@ -69,7 +69,12 @@ struct PlantDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("\(viewModel.titleText) will be permanently removed.")
+            Text(
+                LocalizedText.format(
+                    "%@ will be permanently removed.",
+                    viewModel.titleText
+                )
+            )
         }
         .alert("Add to My Plants", isPresented: $bindableViewModel.showingAddToMyPlantsAlert) {
             TextField("Custom name (optional)", text: $bindableViewModel.pendingCustomName)
@@ -110,6 +115,7 @@ struct PlantDetailView: View {
                 .frame(height: 320)
                 .frame(maxWidth: .infinity)
                 .clipped()
+                .accessibilityHidden(true)
 
             LinearGradient(
                 colors: [.clear, .black.opacity(0.61)],
@@ -212,6 +218,7 @@ struct PlantDetailView: View {
                 .padding(16)
                 .background(.ultraThinMaterial, in: Circle())
         }
+        .accessibilityLabel("Back")
     }
 
     private var menuButton: some View {
@@ -220,7 +227,7 @@ struct PlantDetailView: View {
                 Button {
                     viewModel.showingEditSheet = true
                 } label: {
-                    Label("Bearbeiten", systemImage: "pencil")
+                    Label("Edit", systemImage: "pencil")
                 }
                 Button(role: .destructive) {
                     viewModel.showingDeleteAlert = true
@@ -242,13 +249,14 @@ struct PlantDetailView: View {
                 .padding(16)
                 .background(.ultraThinMaterial, in: Circle())
         }
+        .accessibilityLabel("Plant actions")
     }
     
     // MARK: - Notes
     private var notesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Notizen", systemImage: "note.text")
+                Label("Notes", systemImage: "note.text")
                     .font(.headline)
                 Spacer()
             }
@@ -271,7 +279,7 @@ struct PlantDetailView: View {
 
     private func descriptionSection(_ description: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Beschreibung")
+            Text("Description")
                 .font(.headline)
 
             Text(description)
@@ -310,26 +318,26 @@ struct PlantDetailView: View {
                 ConditionTile(
                     icon: "drop.fill",
                     color: .blue,
-                    title: "Water",
+                    title: String(localized: "Water"),
                     value: viewModel.wateringConditionText
                 )
                 ConditionTile(
                     icon: "leaf.arrow.circlepath",
                     color: .green,
-                    title: "Fertilizer",
+                    title: String(localized: "Fertilizer"),
                     value: viewModel.fertilizingConditionText
                 )
                 if viewModel.hasSpeciesConditions {
                     ConditionTile(
                         icon: "sun.max.fill",
                         color: .orange,
-                        title: "Sunlight",
+                        title: String(localized: "Sunlight"),
                         value: viewModel.sunlightConditionText
                     )
                     ConditionTile(
                         icon: "sparkles",
                         color: .mint,
-                        title: "Care",
+                        title: String(localized: "Care"),
                         value: viewModel.careConditionText
                     )
                 }
@@ -347,14 +355,16 @@ struct PlantDetailView: View {
                 PlanTile(
                     icon: "calendar",
                     color: .blue,
-                    title: "Next Watering",
-                    value: viewModel.nextWateringDueText ?? "Unknown"
+                    title: String(localized: "Next Watering"),
+                    value: viewModel.nextWateringDueText
+                        ?? String(localized: "Unknown")
                 )
                 PlanTile(
                     icon: "calendar",
                     color: .green,
-                    title: "Next Fertilizing",
-                    value: viewModel.nextFertilizingDueText ?? "Unknown"
+                    title: String(localized: "Next Fertilizing"),
+                    value: viewModel.nextFertilizingDueText
+                        ?? String(localized: "Unknown")
                 )
             }
         }
@@ -403,6 +413,9 @@ private struct ConditionTile: View {
         )
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(value)
     }
 }
 
@@ -434,6 +447,9 @@ private struct PlanTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(value)
     }
 }
 

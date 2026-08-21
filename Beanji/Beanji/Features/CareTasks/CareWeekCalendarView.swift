@@ -86,10 +86,16 @@ struct CareWeekCalendarView: View {
         )
 
         if day.hasWateringTask {
-            return "\(dateText), watering scheduled"
+            return LocalizedText.format(
+                "%@, watering scheduled",
+                dateText
+            )
         }
 
-        return "\(dateText), no watering scheduled"
+        return LocalizedText.format(
+            "%@, no watering scheduled",
+            dateText
+        )
     }
 }
 

@@ -17,13 +17,20 @@ enum LocalPlantCatalogError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotFound:
-            return "JSON File could not be found."
+            return String(localized: "JSON file could not be found.")
         case .decodingError:
-            return "Failed to decode data from JSON file."
+            return String(
+                localized: "Failed to decode data from JSON file."
+            )
         case .invalidCatalog(let reason):
-            return "The local catalog is invalid: \(reason)"
+            return LocalizedText.format(
+                "The local catalog is invalid: %@",
+                reason
+            )
         case .plantNotFound:
-            return "Requested plant could not be found in the local catalog."
+            return String(
+                localized: "Requested plant could not be found in the local catalog."
+            )
         }
     }
 }

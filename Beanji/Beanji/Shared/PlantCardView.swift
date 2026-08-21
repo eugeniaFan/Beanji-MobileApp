@@ -20,6 +20,7 @@ struct PlantCardView: View {
         VStack(alignment: .leading, spacing: 16) {
             ZStack(alignment: .top) {
                 PlantImageView(plant: plant)
+                    .accessibilityHidden(true)
                 HStack(alignment: .top) {
                     HStack (spacing: 4) {
                         Image(systemName: "drop.fill")
@@ -48,6 +49,12 @@ struct PlantCardView: View {
                                 .clipShape(Circle())
                                 .shadow(radius: 2)
                         }
+                        .accessibilityLabel(
+                            LocalizedText.format(
+                                "Delete %@",
+                                plant.name
+                            )
+                        )
                     }
                 }
             }.frame(width: 160, height: 140)
@@ -75,7 +82,7 @@ struct PlantCardView: View {
                 Button(role: .destructive) {
                     onDelete()
                 } label: {
-                    Label("Löschen", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             }
             
