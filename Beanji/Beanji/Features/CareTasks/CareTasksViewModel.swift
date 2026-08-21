@@ -82,8 +82,8 @@ final class CareTasksViewModel {
             )?.start
             ?? calendar.startOfDay(for: referenceDate)
 
-        // Completed tasks keep their original due day marked after watering reschedules the plant.
-        let scheduledTasks = openTasks + completedTasks
+        // Markers show current schedules while completed events remain in history.
+        let scheduledTasks = openTasks
 
         return (0..<7).map { dayOffset in
             let date =

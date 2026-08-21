@@ -159,6 +159,12 @@ struct PlantDetailView: View {
                 .resizable()
                 .scaledToFill()
         }
+        else if let imageAssetName = viewModel.species.imageAssetName
+        {
+            Image(imageAssetName)
+                .resizable()
+                .scaledToFill()
+        }
         else if let imageUrl = viewModel.species.imageUrl,
             let url = URL(string: imageUrl)
         {

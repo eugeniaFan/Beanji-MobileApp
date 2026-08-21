@@ -18,7 +18,7 @@ struct SpeciesCardView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "book.fill")
                         .foregroundStyle(.white)
-                    Text("Katalog")
+                    Text("Catalog")
                         .font(.caption.bold())
                         .foregroundStyle(.white)
                         .lineLimit(1)

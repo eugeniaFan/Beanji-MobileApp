@@ -99,6 +99,7 @@ final class PlantDetailViewModel {
                 sunlight: plant.speciesInfo?.sunlight,
                 maintenance: plant.speciesInfo?.maintenance,
                 indoor: plant.speciesInfo?.indoor,
+                imageAssetName: plant.speciesInfo?.imageAssetName,
                 imageUrl: plant.speciesInfo?.imageUrl,
                 careLevel: plant.speciesInfo?.careLevel,
                 description: plant.speciesInfo?.speciesDescription,

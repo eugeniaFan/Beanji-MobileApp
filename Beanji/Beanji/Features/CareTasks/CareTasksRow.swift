@@ -60,9 +60,6 @@ struct CareTasksRow: View {
             VStack(spacing: 4) {
                 Image(systemName: "circle")
                     .font(.title2)
-
-                Text("Done")
-                    .font(.caption2)
             }
         }
         .buttonStyle(.plain)
@@ -73,13 +70,10 @@ struct CareTasksRow: View {
         VStack(spacing: 4) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title2)
-
-            Text("Done")
-                .font(.caption2)
-                .multilineTextAlignment(.center)
         }
         .foregroundStyle(.green.opacity(0.9))
         .accessibilityElement(children: .combine)
+        .accessibilityLabel("Watering completed for \(task.plant.name)")
     }
     
     private var statusText: String {
