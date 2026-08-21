@@ -26,7 +26,6 @@ final class PlantDetailViewModel {
     
     var onPlantDeleted: (() -> Void)?
     var onDidAddToMyPlants: (() -> Void)?
-    var onEditRequested: ((Plant) -> Void)?
     var onPlantUpdated: (() -> Void)?
     var showingEditSheet: Bool = false {
         didSet {
@@ -149,31 +148,41 @@ final class PlantDetailViewModel {
 
     var wateringConditionText: String {
         if let plant = editablePlant {
-            return "Alle \(plant.wateringIntervalDays) Tage"
+            return "Every \(plant.wateringIntervalDays) days"
         }
         if let frequency = species.wateringFrequency {
-            return "Alle \(cleaned(frequency.value)) Tage"
+            return "Every \(cleaned(frequency.value)) days"
         }
-        return species.watering ?? "Unbekannt"
+        return species.watering ?? "Unknown"
     }
 
     var fertilizingConditionText: String {
         if let plant = editablePlant {
-            return "Alle \(plant.fertilizingIntervalDays) Tage"
+            return "Every \(plant.fertilizingIntervalDays) days"
         }
     
-        return "Unbekannt"
+        return "Unknown"
     }
 
     var sunlightConditionText: String {
         guard let sunlight = species.sunlight, !sunlight.isEmpty else {
-            return "Unbekannt"
+            return "Unknown"
         }
         return sunlight.joined(separator: ", ")
     }
 
     var careConditionText: String {
-        species.careLevel ?? species.maintenance ?? "Unbekannt"
+        species.careLevel ?? species.maintenance ?? "Unknown"
+    }
+
+    // Manual plants omit conditions that can only come from catalog metadata.
+    var hasSpeciesConditions: Bool {
+        switch mode {
+        case .editablePlant(let plant):
+            return plant.speciesInfo != nil
+        case .readOnlySpecies:
+            return true
+        }
     }
 
     private func cleaned(_ value: String) -> String {
@@ -184,7 +193,6 @@ final class PlantDetailViewModel {
     // MARK: - Care Plan
     
     // Catalog species have no personal watering history.
-
     var hasCarePlan: Bool {
         editablePlant != nil
     }
@@ -195,12 +203,15 @@ final class PlantDetailViewModel {
         return CareDueTextFormatter.text(daysUntilDue: days, dueDate: dueDate)
     }
 
-    var wateringIntervalPlanText: String? {
+    var nextFertilizingDueText: String? {
         guard let plant = editablePlant else { return nil }
-        return "Alle \(plant.wateringIntervalDays) Tage"
+        let dueDate = plant.nextFertilizingDate(using: calendar)
+        let days = plant.daysUntilNextFertilizing(using: calendar)
+        return CareDueTextFormatter.text(daysUntilDue: days, dueDate: dueDate)
     }
 
     // MARK: - Permissions
+    
     var canEdit: Bool {
         if case .editablePlant = mode { return true }
         return false
@@ -223,7 +234,7 @@ final class PlantDetailViewModel {
             enrichedSpecies = try await plantSpeciesProvider.getPlantDetail(id: baseSpecies.speciesId)
             errorMessage = nil
         } catch {
-            errorMessage = "Detailinformationen konnten nicht geladen werden: \(error.localizedDescription)"
+            errorMessage = "Plant details could not be loaded: \(error.localizedDescription)"
         }
         isLoading = false
     }
@@ -236,40 +247,9 @@ final class PlantDetailViewModel {
             return true
         }
         catch {
-            errorMessage = "Pflanze konnte nicht gelöscht werden."
+            errorMessage = "The plant could not be deleted."
             return false
         }
-    }
-    
-    func updatePlant(
-        name: String,
-        location: String,
-        notes: String,
-        wateringIntervalDays: Int,
-        fertilizingIntervalDays: Int
-    ) async {
-        guard case .editablePlant(let plant) = mode else { return }
-        plant.name = name
-        plant.location =
-            location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? nil : location
-        plant.notes =
-            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? nil : notes
-        plant.wateringIntervalDays = wateringIntervalDays
-        plant.fertilizingIntervalDays = fertilizingIntervalDays
-
-        do {
-            try repository.updatePlant(plant)
-        }
-        catch {
-            errorMessage = "Pflanze konnte nicht aktualisiert werden."
-        }
-    }
-    
-    var canRefreshSpeciesInfo: Bool {
-        guard case .editablePlant(let plant) = mode else { return false }
-        return plant.speciesInfo != nil
     }
 
     func addCurrentSpeciesToMyPlants(userPlantName: String?) async {
@@ -286,52 +266,13 @@ final class PlantDetailViewModel {
             errorMessage = nil
         }
         catch {
-            errorMessage = "Pflanze konnte nicht hinzugefügt werden."
+            errorMessage = "The plant could not be added."
         }
-    }
-
-    var lastWateredText: String? {
-        guard let plant = editablePlant else { return nil }
-
-        let days =
-            Calendar.current
-            .dateComponents(
-                [.day],
-                from: plant.lastWatered,
-                to: Date()
-            )
-            .day ?? 0
-
-        if days == 0 { return "Heute" }
-        if days == 1 { return "Gestern" }
-        return "Vor \(days) Tagen"
-    }
-
-    var sunlightText: String {
-        guard let sunlight = species.sunlight, !sunlight.isEmpty else {
-            return "Unbekannt"
-        }
-        return sunlight.joined(separator: ", ")
-    }
-
-    var wateringInfoText: String {
-        if let lastWateredText {
-            return lastWateredText
-        }
-        if let watering = species.watering,
-            !watering.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            return watering
-        }
-        if let intervalText {
-            return intervalText
-        }
-        return "Unbekannt"
     }
 
     var intervalText: String? {
         if let plant = editablePlant {
-            return "\(plant.wateringIntervalDays) Tage"
+            return "\(plant.wateringIntervalDays) days"
         }
 
         if let frequency = species.wateringFrequency {

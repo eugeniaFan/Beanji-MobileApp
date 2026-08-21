@@ -54,11 +54,11 @@ struct PlantDetailView: View {
             if let editVM = self.viewModel.editViewModel {
                 EditPlantView(viewModel: editVM)
             } else {
-                Text("Kein Bearbeitungsmodell verfügbar.")
+                Text("Editing is unavailable.")
             }
         }
-        .alert("Pflanze löschen?", isPresented: $bindableViewModel.showingDeleteAlert) {
-            Button("Löschen", role: .destructive) {
+        .alert("Delete plant?", isPresented: $bindableViewModel.showingDeleteAlert) {
+            Button("Delete", role: .destructive) {
                 Task {
                     let didDelete = await viewModel.deletePlant()
 
@@ -67,13 +67,13 @@ struct PlantDetailView: View {
                     }
                 }
             }
-            Button("Abbrechen", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("„\(viewModel.titleText)“ wird dauerhaft entfernt.")
+            Text("\(viewModel.titleText) will be permanently removed.")
         }
-        .alert("Zu meinen Pflanzen hinzufügen", isPresented: $bindableViewModel.showingAddToMyPlantsAlert) {
-            TextField("Eigener Name (optional)", text: $bindableViewModel.pendingCustomName)
-            Button("Hinzufügen") {
+        .alert("Add to My Plants", isPresented: $bindableViewModel.showingAddToMyPlantsAlert) {
+            TextField("Custom name (optional)", text: $bindableViewModel.pendingCustomName)
+            Button("Add") {
                 Task {
                     let customName = viewModel.pendingCustomName.trimmingCharacters(in: .whitespacesAndNewlines)
                     await viewModel.addCurrentSpeciesToMyPlants(userPlantName: customName.isEmpty ? nil : customName)
@@ -82,12 +82,12 @@ struct PlantDetailView: View {
                     }
                 }
             }
-            Button("Abbrechen", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Die Art wird als neue Pflanze in „Meine Pflanzen“ gespeichert.")
+            Text("This species will be saved as a new plant in My Plants.")
         }
         .alert(
-            "Fehler",
+            "Error",
             isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
@@ -219,14 +219,14 @@ struct PlantDetailView: View {
                 Button(role: .destructive) {
                     viewModel.showingDeleteAlert = true
                 } label: {
-                    Label("Löschen", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             }
             else if viewModel.canAddToMyPlants {
                 Button {
                     viewModel.showingAddToMyPlantsAlert = true
                 } label: {
-                    Label("Zu meinen Pflanzen hinzufügen", systemImage: "plus")
+                    Label("Add to My Plants", systemImage: "plus")
                 }
             }
         } label: {
@@ -252,7 +252,7 @@ struct PlantDetailView: View {
                     .font(.body)
                     .foregroundStyle(.secondary)
             } else {
-                Text("Keine Notizen vorhanden.")
+                Text("No notes yet.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .italic()
@@ -279,7 +279,7 @@ struct PlantDetailView: View {
                         isDescriptionExpanded = true
                     }
                 } label: {
-                    Label("Mehr anzeigen", systemImage: "chevron.down")
+                    Label("Show more", systemImage: "chevron.down")
                         .font(.subheadline.weight(.semibold))
                 }
                 .tint(.green)
@@ -292,7 +292,7 @@ struct PlantDetailView: View {
 
     private var conditionsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Idealbedingungen")
+            Text("Ideal Conditions")
                 .font(.headline)
 
             LazyVGrid(
@@ -300,32 +300,33 @@ struct PlantDetailView: View {
                     GridItem(.flexible(), spacing: 12),
                     GridItem(.flexible(), spacing: 12),
                 ],
-                spacing: 12
             ) {
                 ConditionTile(
                     icon: "drop.fill",
                     color: .blue,
-                    title: "Wasser",
+                    title: "Water",
                     value: viewModel.wateringConditionText
                 )
                 ConditionTile(
                     icon: "leaf.arrow.circlepath",
                     color: .green,
-                    title: "Düngen",
+                    title: "Fertilizer",
                     value: viewModel.fertilizingConditionText
                 )
-                ConditionTile(
-                    icon: "sun.max.fill",
-                    color: .orange,
-                    title: "Sonne",
-                    value: viewModel.sunlightConditionText
-                )
-                ConditionTile(
-                    icon: "sparkles",
-                    color: .mint,
-                    title: "Pflege",
-                    value: viewModel.careConditionText
-                )
+                if viewModel.hasSpeciesConditions {
+                    ConditionTile(
+                        icon: "sun.max.fill",
+                        color: .orange,
+                        title: "Sunlight",
+                        value: viewModel.sunlightConditionText
+                    )
+                    ConditionTile(
+                        icon: "sparkles",
+                        color: .mint,
+                        title: "Care",
+                        value: viewModel.careConditionText
+                    )
+                }
             }
         }
     }
@@ -333,21 +334,21 @@ struct PlantDetailView: View {
 
     private var carePlanSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Pflegeplan")
+            Text("Care Plan")
                 .font(.headline)
 
             VStack(spacing: 12) {
                 PlanTile(
-                    icon: "drop.fill",
+                    icon: "calendar",
                     color: .blue,
-                    title: "Gießen",
-                    value: viewModel.nextWateringDueText ?? "Unbekannt"
+                    title: "Next Watering",
+                    value: viewModel.nextWateringDueText ?? "Unknown"
                 )
                 PlanTile(
                     icon: "calendar",
-                    color: .teal,
-                    title: "Gießintervall",
-                    value: viewModel.wateringIntervalPlanText ?? "Unbekannt"
+                    color: .green,
+                    title: "Next Fertilizing",
+                    value: viewModel.nextFertilizingDueText ?? "Unknown"
                 )
             }
         }
@@ -363,26 +364,37 @@ private struct ConditionTile: View {
     let value: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12, ) {
-            Image(systemName: icon)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(color)
-                .frame(width: 34, height: 34)
-                .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 34, height: 34)
+                    .background(
+                        color.opacity(0.15),
+                        in: RoundedRectangle(
+                            cornerRadius: 9,
+                            style: .continuous
+                        )
+                    )
 
-            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(2)
+
+                Spacer(minLength: 0)
             }
 
-            Spacer(minLength: 0)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(2, reservesSpace: true)
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(
+            maxWidth: .infinity,
+            minHeight: 106,
+            alignment: .topLeading
+        )
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
@@ -428,7 +440,7 @@ private struct PlanTile: View {
         wateringIntervalDays: 7,
         fertilizingIntervalDays: 30,
         createdAt: Date(),
-        notes: "Neue Blätter entwickeln sich gut.",
+        notes: "New leaves are developing well.",
         photoData: nil
     )
 

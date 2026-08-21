@@ -89,6 +89,145 @@ struct BeanjiTests {
 
     @Test
     @MainActor
+    func manualAddRequiresPlantNameAndSpecies() {
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = []
+        let viewModel = AddPlantViewModel(repository: repository)
+
+        viewModel.name = "   "
+        viewModel.speciesName = ""
+
+        let didSave = viewModel.save()
+
+        #expect(!didSave)
+        #expect(
+            viewModel.errorMessage
+                == "Plant name and species are required."
+        )
+        #expect(repository.mockPlants.isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func manualAddPersistsTrimmedPlantValues() {
+        let calendar = makeTestCalendar()
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 20,
+            using: calendar
+        )
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = []
+        let viewModel = AddPlantViewModel(
+            repository: repository,
+            now: { referenceDate }
+        )
+
+        viewModel.name = "  Bedroom Fern  "
+        viewModel.speciesName = "  Nephrolepis exaltata  "
+        viewModel.location = "  Bedroom  "
+        viewModel.notes = "  Keep away from the radiator.  "
+        viewModel.wateringIntervalDays = 4
+        viewModel.fertilizingIntervalDays = 21
+
+        let didSave = viewModel.save()
+        let savedPlant = repository.mockPlants.first
+
+        #expect(didSave)
+        #expect(viewModel.errorMessage == nil)
+        #expect(repository.mockPlants.count == 1)
+        #expect(savedPlant?.name == "Bedroom Fern")
+        #expect(savedPlant?.speciesName == "Nephrolepis exaltata")
+        #expect(savedPlant?.location == "Bedroom")
+        #expect(savedPlant?.notes == "Keep away from the radiator.")
+        #expect(savedPlant?.lastWatered == referenceDate)
+        #expect(savedPlant?.lastFertilized == referenceDate)
+        #expect(savedPlant?.wateringIntervalDays == 4)
+        #expect(savedPlant?.fertilizingIntervalDays == 21)
+        #expect(savedPlant?.createdAt == referenceDate)
+        #expect(savedPlant?.speciesInfo == nil)
+    }
+
+    @Test
+    @MainActor
+    func manualPlantDetailHidesCatalogOnlyConditions() {
+        let referenceDate = Date()
+        let manualPlant = makeTestPlant(
+            name: "Bedroom Fern",
+            lastWatered: referenceDate,
+            wateringIntervalDays: 4
+        )
+        let catalogPlant = makeTestPlant(
+            name: "Monstera",
+            lastWatered: referenceDate,
+            wateringIntervalDays: 7
+        )
+        catalogPlant.speciesInfo = PlantSpeciesInfo(
+            from: makePlantSpecies(
+                id: 1,
+                commonName: "Swiss Cheese Plant",
+                scientificName: "Monstera deliciosa"
+            )
+        )
+        let repository = InMemoryUserPlantRepository()
+
+        let manualViewModel = PlantDetailViewModel(
+            plant: manualPlant,
+            repository: repository,
+            plantSpeciesProvider: nil
+        )
+        let catalogViewModel = PlantDetailViewModel(
+            plant: catalogPlant,
+            repository: repository,
+            plantSpeciesProvider: nil
+        )
+
+        #expect(!manualViewModel.hasSpeciesConditions)
+        #expect(catalogViewModel.hasSpeciesConditions)
+    }
+
+    @Test
+    @MainActor
+    func fertilizingScheduleUsesLastFertilizedDate() {
+        let calendar = makeTestCalendar()
+        let lastFertilized = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 1,
+            using: calendar
+        )
+        let referenceDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 20,
+            using: calendar
+        )
+        let expectedDueDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 22,
+            using: calendar
+        )
+        let plant = makeTestPlant(
+            name: "Bedroom Fern",
+            lastWatered: referenceDate,
+            wateringIntervalDays: 4
+        )
+        plant.lastFertilized = lastFertilized
+        plant.fertilizingIntervalDays = 21
+
+        #expect(plant.nextFertilizingDate(using: calendar) == expectedDueDate)
+        #expect(
+            plant.daysUntilNextFertilizing(
+                using: calendar,
+                referenceDate: referenceDate
+            ) == 2
+        )
+    }
+
+    @Test
+    @MainActor
     func wateringTaskUsesPlantScheduleForDueStatus() {
         let calendar = makeTestCalendar()
         let lastWatered = makeTestDate(

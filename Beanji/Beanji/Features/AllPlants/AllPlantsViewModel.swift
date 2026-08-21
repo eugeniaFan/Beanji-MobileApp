@@ -17,8 +17,8 @@ enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .myPlants: return "Meine Pflanzen"
-        case .allPlants: return "Alle Pflanzen"
+        case .myPlants: return "My Plants"
+        case .allPlants: return "All Plants"
         }
     }
 }
@@ -34,7 +34,7 @@ final class AllPlantsViewModel {
     var catalogPlants: [PlantSpecies] = []
     var searchText = ""
 
-    var selectedFilter = "Alle"
+    var selectedFilter = "All"
     var selectedPage: PlantListPage = .myPlants
     var plantToDelete: Plant?
     
@@ -42,7 +42,7 @@ final class AllPlantsViewModel {
     var isCatalogLoading = false
     var errorMessage: String?
 
-    let filters = ["Alle", "Drinnen", "Viel Licht", "Schatten"]
+    let filters = ["All", "Indoor", "Bright light", "Shade"]
 
     init(
         catalogService: PlantCatalogRepository,
@@ -50,6 +50,19 @@ final class AllPlantsViewModel {
     ) {
         self.catalogService = catalogService
         self.repository = repository
+    }
+
+    // Connects a successful manual save to the existing My Plants reload path.
+    func makeAddPlantViewModel() -> AddPlantViewModel {
+        let addPlantViewModel = AddPlantViewModel(
+            repository: repository
+        )
+        addPlantViewModel.onPlantSaved = { [weak self] in
+            Task {
+                await self?.loadMyPlants()
+            }
+        }
+        return addPlantViewModel
     }
 
     
@@ -103,7 +116,7 @@ final class AllPlantsViewModel {
             errorMessage = nil
         } catch {
             errorMessage =
-                "Fehler beim Laden aller Pflanzen: \(error.localizedDescription)"
+                "Could not load saved plants: \(error.localizedDescription)"
         }
     }
     
@@ -135,7 +148,7 @@ final class AllPlantsViewModel {
             errorMessage = nil
         } catch {
             errorMessage =
-                "Fehler beim Löschen einer Pflanze: \(error.localizedDescription)"
+                "Could not delete the plant: \(error.localizedDescription)"
         }
         isLoading = false
     }
@@ -183,17 +196,15 @@ final class AllPlantsViewModel {
 
     private func matchesFilter(plant: Plant) -> Bool {
         switch selectedFilter {
-        case "Alle":
+        case "All":
             return true
-        case "Drinnen":
+        case "Indoor":
             if let indoor = plant.speciesInfo?.indoor {
                 return indoor
             }
-            return plant.location?.localizedCaseInsensitiveContains("innen")
+            return plant.location?.localizedCaseInsensitiveContains("indoor")
                 == true
-                || plant.location?.localizedCaseInsensitiveContains("indoor")
-                    == true
-        case "Viel Licht":
+        case "Bright light":
             let sunlight = plant.speciesInfo?.sunlight ?? []
             return sunlight.contains {
                 $0.localizedCaseInsensitiveContains("full")
@@ -201,14 +212,11 @@ final class AllPlantsViewModel {
                 || sunlight.contains {
                     $0.localizedCaseInsensitiveContains("bright")
                 }
-        case "Schatten":
+        case "Shade":
             let sunlight = plant.speciesInfo?.sunlight ?? []
             return sunlight.contains {
                 $0.localizedCaseInsensitiveContains("shade")
             }
-                || sunlight.contains {
-                    $0.localizedCaseInsensitiveContains("schatten")
-                }
         default:
             return true
         }
@@ -216,11 +224,11 @@ final class AllPlantsViewModel {
     
     private func matchesFilter(species: PlantSpecies) -> Bool {
         switch selectedFilter {
-        case "Alle":
+        case "All":
             return true
-        case "Drinnen":
+        case "Indoor":
             return species.indoor == true
-        case "Viel Licht":
+        case "Bright light":
             let sunlight = species.sunlight ?? []
             return sunlight.contains {
                 $0.localizedCaseInsensitiveContains("full")
@@ -228,14 +236,11 @@ final class AllPlantsViewModel {
                 || sunlight.contains {
                     $0.localizedCaseInsensitiveContains("bright")
                 }
-        case "Schatten":
+        case "Shade":
             let sunlight = species.sunlight ?? []
             return sunlight.contains {
                 $0.localizedCaseInsensitiveContains("shade")
             }
-                || sunlight.contains {
-                    $0.localizedCaseInsensitiveContains("schatten")
-                }
         default:
             return true
         }
@@ -246,11 +251,11 @@ func nextWateringText(for plant: Plant) -> String {
     let days = plant.daysUntilNextWatering()
 
     if days <= 0 {
-        return "Heute gießen"
+        return "Water today"
     } else if days == 1 {
-        return "Morgen"
+        return "Tomorrow"
     } else {
-        return "In \(days) Tagen"
+        return "In \(days) days"
     }
 }
 
