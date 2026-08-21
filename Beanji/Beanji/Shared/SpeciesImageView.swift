@@ -17,7 +17,11 @@ struct SpeciesImageView: View {
 
     var body: some View {
         ZStack {
-            if let urlString = species.imageUrl,
+            if let imageAssetName = species.imageAssetName {
+                Image(imageAssetName)
+                    .resizable()
+                    .scaledToFill()
+            } else if let urlString = species.imageUrl,
                 let url = URL(string: urlString)
             {
                 AsyncImage(url: url) { phase in

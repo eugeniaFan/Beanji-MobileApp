@@ -3,57 +3,45 @@
     "id": 1,
     "commonName": "Swiss Cheese Plant",
     "scientificName": "Monstera deliciosa",
-    "watering": "Average",
-    "wateringFrequency": {
-      "unit": "days",
-      "value": "7"
-    },
-    "sunlight": [
-      "bright indirect light",
-      "medium indirect light"
+    "wateringNeed": "moderate",
+    "wateringIntervalDays": 7,
+    "lightRequirements": [
+      "brightIndirect",
+      "mediumIndirect"
     ],
-    "maintenance": "Moderate",
-    "indoor": true,
-    "imageUrl": null,
-    "careLevel": "Easy",
+    "careDifficulty": "beginnerFriendly",
+    "isIndoor": true,
+    "imageAssetName": null,
     "description": "A tropical houseplant known for its large green leaves and naturally developing leaf openings."
   },
   {
     "id": 2,
     "commonName": "Snake Plant",
     "scientificName": "Dracaena trifasciata",
-    "watering": "Minimum",
-    "wateringFrequency": {
-      "unit": "days",
-      "value": "14"
-    },
-    "sunlight": [
-      "bright indirect light",
-      "low light"
+    "wateringNeed": "low",
+    "wateringIntervalDays": 14,
+    "lightRequirements": [
+      "brightIndirect",
+      "low"
     ],
-    "maintenance": "Low",
-    "indoor": true,
-    "imageUrl": null,
-    "careLevel": "Easy",
+    "careDifficulty": "beginnerFriendly",
+    "isIndoor": true,
+    "imageAssetName": null,
     "description": "A resilient houseplant with upright leaves that tolerates a wide range of indoor light conditions."
   },
   {
     "id": 3,
     "commonName": "Golden Pothos",
     "scientificName": "Epipremnum aureum",
-    "watering": "Average",
-    "wateringFrequency": {
-      "unit": "days",
-      "value": "8"
-    },
-    "sunlight": [
-      "bright indirect light",
-      "medium indirect light"
+    "wateringNeed": "moderate",
+    "wateringIntervalDays": 8,
+    "lightRequirements": [
+      "brightIndirect",
+      "mediumIndirect"
     ],
-    "maintenance": "Low",
-    "indoor": true,
-    "imageUrl": null,
-    "careLevel": "Easy",
+    "careDifficulty": "beginnerFriendly",
+    "isIndoor": true,
+    "imageAssetName": null,
     "description": "A trailing houseplant with heart-shaped leaves that adapts well to common indoor environments."
   }
 ]

@@ -11,6 +11,7 @@ import Foundation
 enum LocalPlantCatalogError: LocalizedError {
     case fileNotFound
     case decodingError
+    case invalidCatalog(String)
     case plantNotFound
 
     var errorDescription: String? {
@@ -19,6 +20,8 @@ enum LocalPlantCatalogError: LocalizedError {
             return "JSON File could not be found."
         case .decodingError:
             return "Failed to decode data from JSON file."
+        case .invalidCatalog(let reason):
+            return "The local catalog is invalid: \(reason)"
         case .plantNotFound:
             return "Requested plant could not be found in the local catalog."
         }
@@ -59,9 +62,15 @@ struct LocalPlantCatalog: PlantCatalogRepository {
                 options: .mappedIfSafe
             )
             
-            return try JSONDecoder().decode(
-                [PlantSpecies].self,
+            let localPlants = try JSONDecoder().decode(
+                [BundledPlantEntry].self,
                 from: data
+            )
+            try BundledPlantEntry.validate(localPlants)
+            return localPlants.map(\.plantSpecies)
+        } catch let error as LocalCatalogValidationError {
+            throw LocalPlantCatalogError.invalidCatalog(
+                error.localizedDescription
             )
         } catch {
             throw LocalPlantCatalogError.decodingError

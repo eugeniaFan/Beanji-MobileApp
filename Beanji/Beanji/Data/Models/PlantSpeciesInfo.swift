@@ -20,6 +20,7 @@ final class PlantSpeciesInfo: Identifiable, Hashable {
     var sunlight: [String]?
     var maintenance: String?
     var indoor: Bool?
+    var imageAssetName: String?
     var imageUrl: String?
     var careLevel: String?
     var speciesDescription: String?
@@ -37,6 +38,7 @@ final class PlantSpeciesInfo: Identifiable, Hashable {
         self.sunlight = species.sunlight
         self.maintenance = species.maintenance
         self.indoor = species.indoor
+        self.imageAssetName = species.imageAssetName
         self.imageUrl = species.imageUrl
         self.careLevel = species.careLevel
         self.speciesDescription = species.description
@@ -51,6 +53,7 @@ final class PlantSpeciesInfo: Identifiable, Hashable {
         sunlight = species.sunlight
         maintenance = species.maintenance
         indoor = species.indoor
+        imageAssetName = species.imageAssetName
         imageUrl = species.imageUrl
         careLevel = species.careLevel
         speciesDescription = species.description

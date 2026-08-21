@@ -14,6 +14,119 @@ struct BeanjiTests {
 
     @Test
     @MainActor
+    func bundledCatalogDecodesAndMapsBeanjiValues() async throws {
+        let plants = try await LocalPlantCatalog()
+            .searchPlants(matching: "")
+
+        let monstera = plants.first { $0.speciesId == 1 }
+
+        #expect(plants.count == 3)
+        #expect(monstera?.commonName == "Swiss Cheese Plant")
+        #expect(monstera?.watering == "Moderate")
+        #expect(monstera?.wateringFrequency?.value == "7")
+        #expect(
+            monstera?.sunlight
+                == ["Bright indirect light", "Medium indirect light"]
+        )
+        #expect(monstera?.careLevel == "Beginner friendly")
+        #expect(monstera?.imageAssetName == nil)
+        #expect(monstera?.imageUrl == nil)
+    }
+
+    @Test
+    func localCatalogValidationRejectsDuplicateIDs() {
+        let plant = makeBundledPlantEntry(id: 1)
+
+        do {
+            try BundledPlantEntry.validate([plant, plant])
+            Issue.record("Expected duplicate catalog IDs to fail validation.")
+        } catch let error as LocalCatalogValidationError {
+            #expect(error == .duplicateID(1))
+        } catch {
+            Issue.record("Unexpected validation error: \(error)")
+        }
+    }
+
+    @Test
+    func localCatalogValidationRejectsEmptyRequiredNames() {
+        let plant = makeBundledPlantEntry(commonName: "   ")
+
+        do {
+            try BundledPlantEntry.validate([plant])
+            Issue.record("Expected an empty common name to fail validation.")
+        } catch let error as LocalCatalogValidationError {
+            #expect(
+                error == .emptyRequiredValue(
+                    plantID: 1,
+                    field: "commonName"
+                )
+            )
+        } catch {
+            Issue.record("Unexpected validation error: \(error)")
+        }
+    }
+
+    @Test
+    func localCatalogValidationRejectsInvalidWateringIntervals() {
+        let plant = makeBundledPlantEntry(wateringIntervalDays: 0)
+
+        do {
+            try BundledPlantEntry.validate([plant])
+            Issue.record("Expected an invalid watering interval to fail validation.")
+        } catch let error as LocalCatalogValidationError {
+            #expect(
+                error == .invalidWateringInterval(
+                    plantID: 1,
+                    value: 0
+                )
+            )
+        } catch {
+            Issue.record("Unexpected validation error: \(error)")
+        }
+    }
+
+    @Test
+    func localCatalogDecodingRejectsUnknownCareCategories() {
+        let json = """
+        [
+          {
+            "id": 1,
+            "commonName": "Swiss Cheese Plant",
+            "scientificName": "Monstera deliciosa",
+            "wateringNeed": "sometimes",
+            "wateringIntervalDays": 7,
+            "lightRequirements": ["brightIndirect"],
+            "careDifficulty": "beginnerFriendly",
+            "isIndoor": true,
+            "imageAssetName": null,
+            "description": "Description"
+          }
+        ]
+        """
+
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(
+                [BundledPlantEntry].self,
+                from: Data(json.utf8)
+            )
+        }
+    }
+
+    @Test
+    @MainActor
+    func localImageAssetNameFlowsIntoPersistedSpeciesInfo() {
+        let localPlant = makeBundledPlantEntry(
+            imageAssetName: "monstera-deliciosa"
+        )
+        let species = localPlant.plantSpecies
+        let speciesInfo = PlantSpeciesInfo(from: species)
+
+        #expect(species.imageAssetName == "monstera-deliciosa")
+        #expect(speciesInfo.imageAssetName == "monstera-deliciosa")
+    }
+
+    @Test
+    @MainActor
     func clearingCatalogSearchShowsAllLocalPlantsAgain() async {
         let viewModel = AllPlantsViewModel(
             catalogService: TestPlantCatalog(),
@@ -799,6 +912,27 @@ private func makePlantSpecies(
         imageUrl: nil,
         careLevel: nil,
         description: nil
+    )
+}
+
+private func makeBundledPlantEntry(
+    id: Int = 1,
+    commonName: String = "Swiss Cheese Plant",
+    scientificName: String = "Monstera deliciosa",
+    wateringIntervalDays: Int = 7,
+    imageAssetName: String? = nil
+) -> BundledPlantEntry {
+    BundledPlantEntry(
+        id: id,
+        commonName: commonName,
+        scientificName: scientificName,
+        wateringNeed: .moderate,
+        wateringIntervalDays: wateringIntervalDays,
+        lightRequirements: [.brightIndirect, .mediumIndirect],
+        careDifficulty: .beginnerFriendly,
+        isIndoor: true,
+        imageAssetName: imageAssetName,
+        description: "An independently written description."
     )
 }
 

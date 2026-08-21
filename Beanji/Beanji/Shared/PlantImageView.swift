@@ -33,6 +33,10 @@ struct PlantImageView: View {
                             .font(.system(size: 48))
                             .foregroundStyle(.red.opacity(0.6))
                     }
+            } else if let imageAssetName = plant.speciesInfo?.imageAssetName {
+                Image(imageAssetName)
+                    .resizable()
+                    .scaledToFill()
             } else {
                 Color.green.opacity(0.1)
                     .overlay{
