@@ -23,6 +23,12 @@ Beanji is a local-first iOS plant-care application for people who want a simple 
 
 Beanji works offline and does not require an account, backend, or API key.
 
+## Screenshots
+
+| Care schedule | Plant collection | Plant details |
+| --- | --- | --- |
+| <img src="docs/screenshots/care-schedule.png" alt="Today view with watering tasks and weekly care calendar" width="260"> | <img src="docs/screenshots/plant-collection.png" alt="Personal plant collection and local catalog" width="260"> | <img src="docs/screenshots/plant-details.png" alt="Plant details with individual care schedule" width="260"> |
+
 ## Architecture and Data 
 
 Beanji follows pragmatic MVVM with repository boundaries around persistence and catalog access.
