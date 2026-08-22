@@ -63,15 +63,6 @@ struct SpeciesImageView: View {
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
-    
-    private func placeholderView(color: Color, icon: String) -> some View {
-        color.opacity(0.1)
-            .overlay {
-                Image(systemName: icon)
-                    .font(.system(size: 48))
-                    .foregroundStyle(color.opacity(0.4))
-            }
-    }
 }
 
 #Preview {

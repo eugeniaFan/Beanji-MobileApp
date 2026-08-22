@@ -58,16 +58,14 @@ struct EditPlantView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        Task {
-                            if await viewModel.save() {
-                                dismiss()
-                            }
+                        if viewModel.save() {
+                            dismiss()
                         }
                     } label: {
                         Image(systemName: "checkmark")
                     }
                     .accessibilityLabel("Save")
-                    .disabled(!viewModel.canSave || viewModel.isSaving)
+                    .disabled(!viewModel.canSave)
                 }
             }
             .alert(
@@ -94,7 +92,7 @@ struct EditPlantView: View {
         wateringIntervalDays: 7,
         fertilizingIntervalDays: 30,
         createdAt: Date(),
-        location: "Wohnzimmer"
+        location: "Living room"
     )
 
     EditPlantView(
