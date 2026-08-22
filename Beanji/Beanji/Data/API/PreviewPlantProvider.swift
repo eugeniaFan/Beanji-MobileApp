@@ -22,7 +22,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: true,
             imageUrl: nil,
             careLevel: "Easy",
-            description: "Aloe Vera ist eine pflegeleichte Sukkulente, die wenig Wasser braucht.",
+            description:
+                "Aloe vera is a low-maintenance succulent that needs little water.",
         ),
         PlantSpecies(
             speciesId: 2,
@@ -35,7 +36,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: true,
             imageUrl: nil,
             careLevel: "Easy",
-            description: "Die Monstera mag indirektes Licht und große, gefensterte Blätter.",
+            description:
+                "Monstera prefers indirect light and develops large split leaves.",
         ),
         PlantSpecies(
             speciesId: 3,
@@ -48,7 +50,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: true,
             imageUrl: nil,
             careLevel: "Moderate",
-            description: "Basilikum braucht viel Sonne und regelmäßiges Gießen.",
+            description:
+                "Basil needs plenty of sunlight and regular watering.",
         ),
         PlantSpecies(
             speciesId: 4,
@@ -61,7 +64,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: false,
             imageUrl: nil,
             careLevel: "Moderate",
-            description: "Tomaten brauchen mindestens 6-8 Stunden direkte Sonne, regelmäßiges Gießen und eine Rankhilfe.",
+            description:
+                "Tomatoes need direct sunlight, regular watering, and support as they grow.",
         ),
         PlantSpecies(
             speciesId: 5,
@@ -74,7 +78,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: false,
             imageUrl: nil,
             careLevel: "Easy",
-            description: "Lavendel liebt volle Sonne und trockenen Boden. Nach der Blüte zurückschneiden.",
+            description:
+                "Lavender prefers full sun and dry soil and benefits from pruning after flowering.",
         ),
         PlantSpecies(
             speciesId: 6,
@@ -87,7 +92,8 @@ struct PreviewPlantProvider: PlantCatalogRepository {
             indoor: true,
             imageUrl: nil,
             careLevel: "Easy",
-            description: "Rosmarin mag volle Sonne und gut durchlässigen Boden. Erst gießen, wenn die Erde trocken ist.",
+            description:
+                "Rosemary prefers full sun and well-draining soil. Water after the soil dries.",
         )
     ]
 

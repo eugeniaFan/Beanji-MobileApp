@@ -19,7 +19,6 @@ final class EditPlantViewModel {
     var notes: String
     var wateringIntervalDays: Int
     var fertilizingIntervalDays: Int
-    var isSaving = false
     var errorMessage: String?
 
     var onPlantUpdated: (() -> Void)?
@@ -39,21 +38,20 @@ final class EditPlantViewModel {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    func save() async -> Bool {
+    func save() -> Bool {
         guard canSave else { return false }
-        isSaving = true
-        defer { isSaving = false }
 
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedLocation = location.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
+        let trimmedNotes = notes.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
         plant.name = trimmedName
         plant.location = trimmedLocation.isEmpty ? nil : trimmedLocation
-        plant.notes =
-            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? nil : notes
+        plant.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
         plant.wateringIntervalDays = wateringIntervalDays
         plant.fertilizingIntervalDays = fertilizingIntervalDays
 
@@ -66,9 +64,5 @@ final class EditPlantViewModel {
             errorMessage = String(localized: "The plant could not be saved.")
             return false
         }
-    }
-
-    func saveChanges() async {
-        _ = await save()
     }
 }

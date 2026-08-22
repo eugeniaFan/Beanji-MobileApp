@@ -25,14 +25,14 @@ struct PlantCardView: View {
                     HStack (spacing: 4) {
                         Image(systemName: "drop.fill")
                             .foregroundStyle(.white)
-                        Text(nextWateringText(for: plant))
+                        Text(nextWateringText)
                             .font(.caption.bold())
                             .foregroundStyle(.white)
                             .lineLimit(1)
                         
                     }.padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(waterStatusColor(for: plant))
+                        .background(waterStatusColor)
                         .clipShape(Capsule())
                         .shadow(radius: 2)
                     
@@ -87,6 +87,22 @@ struct PlantCardView: View {
             }
             
         }
+    }
+
+    private var nextWateringText: String {
+        let days = plant.daysUntilNextWatering()
+
+        if days <= 0 {
+            return String(localized: "Water today")
+        } else if days == 1 {
+            return String(localized: "Tomorrow")
+        } else {
+            return LocalizedText.format("In %lld days", Int64(days))
+        }
+    }
+
+    private var waterStatusColor: Color {
+        plant.daysUntilNextWatering() <= 1 ? .orange : .blue
     }
 }
 

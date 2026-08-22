@@ -7,7 +7,6 @@
 
 import Foundation
 import Observation
-import SwiftUI
 
 enum PlantListPage: Int, CaseIterable, Identifiable, Hashable {
     case myPlants = 0
@@ -98,7 +97,6 @@ final class AllPlantsViewModel {
         return viewModel
     }
 
-    
     func loadInitialData() async {
         async let ownPlants: () = loadMyPlants()
         async let catalog: () = loadCatalog()
@@ -256,20 +254,4 @@ final class AllPlantsViewModel {
             return true
         }
     }
-}
-
-func nextWateringText(for plant: Plant) -> String {
-    let days = plant.daysUntilNextWatering()
-
-    if days <= 0 {
-        return String(localized: "Water today")
-    } else if days == 1 {
-        return String(localized: "Tomorrow")
-    } else {
-        return LocalizedText.format("In %lld days", Int64(days))
-    }
-}
-
-func waterStatusColor(for plant: Plant) -> Color {
-    plant.daysUntilNextWatering() <= 1 ? .orange : .blue
 }

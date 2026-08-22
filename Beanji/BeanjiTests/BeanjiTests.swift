@@ -266,6 +266,33 @@ struct BeanjiTests {
 
     @Test
     @MainActor
+    func editPlantPersistsTrimmedValues() {
+        let plant = makeTestPlant(
+            name: "Bedroom Fern",
+            lastWatered: Date(),
+            wateringIntervalDays: 4
+        )
+        let repository = InMemoryUserPlantRepository()
+        repository.mockPlants = [plant]
+        let viewModel = EditPlantViewModel(
+            plant: plant,
+            repository: repository
+        )
+
+        viewModel.name = "  Office Fern  "
+        viewModel.location = "   "
+        viewModel.notes = "  Keep away from the radiator.  "
+
+        let didSave = viewModel.save()
+
+        #expect(didSave)
+        #expect(plant.name == "Office Fern")
+        #expect(plant.location == nil)
+        #expect(plant.notes == "Keep away from the radiator.")
+    }
+
+    @Test
+    @MainActor
     func manualPlantDetailHidesCatalogOnlyConditions() {
         let referenceDate = Date()
         let manualPlant = makeTestPlant(
