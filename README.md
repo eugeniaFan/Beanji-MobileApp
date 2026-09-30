@@ -18,7 +18,7 @@ Beanji is a local-first iOS plant-care application for people who want a simple 
 - Browse and search a validated offline plant catalog.
 - Add catalog plants or create personal plants manually.
 - Edit plant details and individual watering and fertilizing intervals.
-- Track overdue and upcoming watering tasks in a Today view and weekly calendar.
+- Select a day in the weekly calendar to view upcoming watering tasks, while Today keeps overdue, due-today, and completed tasks together.
 - Persist completed watering actions and automatically recalculate the next due date.
 
 Beanji works offline and does not require an account, backend, or API key.
@@ -81,7 +81,7 @@ The unit test suite covers:
 - Local search and explicit remote-enrichment behavior
 - Manual plant creation, editing, and catalog-specific detail behavior
 - Watering and fertilizing schedule calculations
-- Today and weekly care-task state, completion, and error handling
+- Care-calendar day selection, empty states, completion, and error handling
 - SwiftData care-event persistence and atomic watering updates
 
 UI coverage includes launch checks, launch performance measurement, and one focused manual Add Plant flow.

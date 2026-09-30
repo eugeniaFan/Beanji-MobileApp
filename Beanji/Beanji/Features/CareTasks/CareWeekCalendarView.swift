@@ -10,6 +10,7 @@ import Foundation
 
 struct CareWeekCalendarView: View {
     let days: [CareCalendarDay]
+    @Binding var selectedDate: Date
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -19,55 +20,77 @@ struct CareWeekCalendarView: View {
 
             HStack(spacing: 0) {
                 ForEach(days) { day in
-                    VStack(spacing: 7) {
-                        Text(
-                            day.date.formatted(
-                                .dateTime.weekday(.abbreviated)
-                            )
-                        )
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+                    let isSelected = Calendar.current.isDate(
+                        day.date,
+                        inSameDayAs: selectedDate
+                    )
 
-                        Text(
-                            day.date.formatted(
-                                .dateTime.day()
+                    Button {
+                        selectedDate = day.date
+                    } label: {
+                        VStack(spacing: 7) {
+                            Text(
+                                day.date.formatted(
+                                    .dateTime.weekday(.abbreviated)
+                                )
                             )
-                        )
-                        .font(.subheadline)
-                        .fontWeight(day.isToday ? .bold : .medium)
-                        .foregroundStyle(
-                            day.isToday
-                                ? Color(.systemBackground)
-                                : Color.primary
-                        )
-                        .frame(width: 30, height: 30)
-                        .background(
-                            day.isToday
-                                ? Color.primary
-                                : Color.clear
-                        )
-                        .clipShape(Circle())
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
 
-                        Group {
-                            if day.hasWateringTask {
-                                Image(systemName: "drop.fill")
-                                    .foregroundStyle(.blue)
-                                    .accessibilityHidden(true)
+                            Text(
+                                day.date.formatted(
+                                    .dateTime.day()
+                                )
+                            )
+                            .font(.subheadline)
+                            .fontWeight(day.isToday ? .bold : .medium)
+                            .foregroundStyle(
+                                day.isToday
+                                    ? Color(.systemBackground)
+                                    : Color.primary
+                            )
+                            .frame(width: 30, height: 30)
+                            .background(
+                                day.isToday
+                                    ? Color.primary
+                                    : Color.clear
+                            )
+                            .clipShape(Circle())
+
+                            Group {
+                                if day.hasWateringTask {
+                                    Image(systemName: "drop.fill")
+                                        .foregroundStyle(.blue)
+                                        .accessibilityHidden(true)
+                                }
+                                else {
+                                    Color.clear
+                                        .frame(width: 14, height: 14)
+                                }
                             }
-                            else {
-                                Color.clear
-                                    .frame(width: 14, height: 14)
-                            }
+                            .font(.caption)
+                            .frame(height: 16)
                         }
-                        .font(.caption)
-                        .frame(height: 16)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(
+                                    isSelected ? Color.gray : Color.clear,
+                                    lineWidth: 2
+                                )
+                        }
                     }
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.plain)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(
                         accessibilityLabel(for: day)
+                    )
+                    .accessibilityAddTraits(
+                        isSelected ? .isSelected : []
                     )
                 }
             }
@@ -76,6 +99,7 @@ struct CareWeekCalendarView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
+
 
     private func accessibilityLabel(
         for day: CareCalendarDay
@@ -100,6 +124,7 @@ struct CareWeekCalendarView: View {
 }
 
 #Preview {
+    @Previewable @State var selectedDate = Date()
     let calendar = Calendar.current
     let monday = calendar.date(
         from: DateComponents(
@@ -123,7 +148,10 @@ struct CareWeekCalendarView: View {
             hasWateringTask: wateringDays.contains(dayOffset)
         )
     }
-     CareWeekCalendarView(days: days)
+     CareWeekCalendarView(
+        days: days,
+        selectedDate: $selectedDate
+     )
         .padding(20)
         .background(Color(.systemGroupedBackground))
 }
