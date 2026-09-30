@@ -23,8 +23,8 @@ struct CareTasksView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     header
-                    todaySection
-                    CareWeekCalendarView(days: viewModel.weekDays)
+                    CareWeekCalendarView(days: viewModel.weekDays, selectedDate: $viewModel.selectedDate)
+                    selectedDaySection
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -71,16 +71,27 @@ struct CareTasksView: View {
         }
     }
 
-    private var todaySection: some View {
+    private var selectedDaySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Today")
-                .font(.title2.bold())
-                .accessibilityAddTraits(.isHeader)
+            Group {
+                if viewModel.isSelectedDateToday {
+                    Text("Today")
+                } else {
+                    Text(
+                        viewModel.selectedDate.formatted(
+                            date: .complete,
+                            time: .omitted
+                        )
+                    )
+                }
+            }
+            .font(.title2.bold())
+            .accessibilityAddTraits(.isHeader)
 
-            if viewModel.isLoading && viewModel.todayTasks.isEmpty {
+            if viewModel.isLoading && viewModel.selectedDayTasks.isEmpty {
                 loadingView
             }
-            else if viewModel.todayTasks.isEmpty {
+            else if viewModel.selectedDayTasks.isEmpty {
                 emptyState
             }
             else {
@@ -105,7 +116,7 @@ struct CareTasksView: View {
     private var taskList: some View {
         LazyVStack(spacing: 12) {
             LazyVStack(spacing: 12) {
-                ForEach(viewModel.todayTasks) { task in
+                ForEach(viewModel.selectedDayTasks) { task in
                     CareTasksRow(
                         task: task,
                         dueText: viewModel.dueText(for: task),
@@ -115,6 +126,7 @@ struct CareTasksView: View {
                             await viewModel.complete(task)
                         }
                     }
+                    .disabled(!viewModel.isSelectedDateToday)
                 }
             }
         }
@@ -127,23 +139,13 @@ struct CareTasksView: View {
     }
 
     private var emptyState: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "leaf.circle.fill")
-                .font(.title2)
-                .foregroundStyle(.green)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Everything is good to go.")
-                    .font(.headline)
-
-                Text(viewModel.emptyStateText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+        VStack {
+            Text(viewModel.emptyStateText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
         .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }

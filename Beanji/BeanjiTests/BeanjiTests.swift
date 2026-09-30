@@ -427,7 +427,7 @@ struct BeanjiTests {
 
     @Test
     @MainActor
-    func todayTasksIncludeOverdueAndDueTodayOnly() async {
+    func selectedDayTasksFollowCalendarSelection() async {
         let calendar = makeTestCalendar()
         let referenceDate = makeTestDate(
             year: 2026,
@@ -468,6 +468,7 @@ struct BeanjiTests {
                 wateringIntervalDays: 3
             )
         ]
+
         let viewModel = CareTasksViewModel(
             repository: repository,
             careEventRepository: InMemoryCareEventRepository(),
@@ -492,6 +493,56 @@ struct BeanjiTests {
         #expect(
             viewModel.dueText(for: overdueTask)
                 == String(localized: "Overdue since yesterday")
+        )
+
+        #expect(viewModel.isSelectedDateToday)
+        #expect(
+            viewModel.selectedDayTasks.map {$0.plant.name}
+                == ["Overdue", "Due Today"]
+        )
+
+        viewModel.selectedDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 19,
+            using: calendar
+        )
+
+        #expect(!viewModel.isSelectedDateToday)
+        #expect(
+            viewModel.selectedDayTasks.map {$0.plant.name}
+                == ["Due Tomorrow"]
+        )
+
+        let markedToday = viewModel.weekDays.filter { $0.isToday }
+
+        #expect(markedToday.count == 1)
+        #expect(markedToday.first?.date == calendar.startOfDay(for: referenceDate))
+
+        viewModel.selectedDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 20,
+            using: calendar
+        )
+
+        #expect(viewModel.selectedDayTasks.isEmpty)
+
+        viewModel.selectedDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 17,
+            using: calendar
+        )
+
+        #expect(viewModel.selectedDayTasks.isEmpty)
+
+        viewModel.selectedDate = referenceDate
+
+        #expect(viewModel.isSelectedDateToday)
+        #expect(
+            viewModel.selectedDayTasks.map {$0.plant.name}
+                == ["Overdue", "Due Today"]
         )
     }
 
@@ -699,7 +750,7 @@ struct BeanjiTests {
         )
 
         await reloadedViewModel.loadTasks()
-        let todayTasks = reloadedViewModel.todayTasks
+        let todayTasks = reloadedViewModel.selectedDayTasks
         let completedTaskNames = todayTasks
             .filter(\.isCompleted)
             .map { $0.plant.name }
@@ -722,6 +773,31 @@ struct BeanjiTests {
         #expect(completedTaskNames == ["Due Today"])
         #expect(originalDueDay?.hasWateringTask == false)
         #expect(nextDueDay?.hasWateringTask == true)
+
+        reloadedViewModel.selectedDate = makeTestDate(
+            year: 2026,
+            month: 8,
+            day: 19,
+            using: calendar
+        )
+        #expect(reloadedViewModel.selectedDayTasks.isEmpty)
+
+        reloadedViewModel.selectedDate = nextDueDate
+
+        let upcomingTasks = reloadedViewModel.selectedDayTasks
+
+        #expect(upcomingTasks.count == 1)
+        #expect(upcomingTasks.first?.plant.id == task.plant.id)
+        #expect(upcomingTasks.first?.isCompleted == false)
+        #expect(upcomingTasks.first?.dueDate == nextDueDate)
+
+        reloadedViewModel.selectedDate = referenceDate
+
+        let completedToday = reloadedViewModel.selectedDayTasks
+
+        #expect(completedToday.count == 1)
+        #expect(completedToday.first?.plant.id == task.plant.id)
+        #expect(completedToday.first?.isCompleted == true)
     }
 
     @Test

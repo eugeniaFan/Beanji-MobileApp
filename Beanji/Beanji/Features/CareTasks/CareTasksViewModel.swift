@@ -18,6 +18,7 @@ final class CareTasksViewModel {
 
     var plants: [Plant] = []
     var completedTasks: [CareTask] = []
+    var selectedDate: Date
     var isLoading = false
     var errorMessage: String?
 
@@ -31,6 +32,39 @@ final class CareTasksViewModel {
         self.careEventRepository = careEventRepository
         self.calendar = calendar
         self.now = now
+        self.selectedDate = calendar.startOfDay(for: now())
+    }
+
+    var isSelectedDateToday:Bool {
+        calendar.isDate(
+            selectedDate,
+            inSameDayAs: now()
+        )
+    }
+
+    var selectedDayTasks: [CareTask] {
+        // Calculate and return the result.
+
+        if isSelectedDateToday {
+            return todayTasks
+        }
+        let selectedDay = calendar.startOfDay(for: selectedDate)
+        let today = calendar.startOfDay(for: now())
+
+        if selectedDay < today {
+            return []
+        }
+
+        return openTasks
+            .filter { task in
+                calendar.isDate(
+                    task.dueDate,
+                    inSameDayAs: selectedDate
+                )
+            }
+            .sorted { firstTask, secondTask in
+                firstTask.dueDate < secondTask.dueDate
+            }
     }
 
     // Replaces a plant's new open task with today's completion to avoid duplicate rows.
@@ -114,7 +148,22 @@ final class CareTasksViewModel {
     }
 
     var emptyStateText: String {
-        String(localized: "No watering tasks are due today.")
+        if isSelectedDateToday {
+            return String(
+                localized: "No watering tasks are due today."
+            )
+        }
+
+        if calendar.startOfDay(for: selectedDate)
+            < calendar.startOfDay(for: now()) {
+            return String(
+                localized: "Overdue tasks are shown under Today."
+            )
+        }
+
+        return String(
+            localized: "No watering tasks are scheduled for this day."
+        )
     }
 
     // Loads plants independently so event-history failures do not hide open tasks.
